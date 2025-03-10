@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <title>Chính sách khi mua hàng tại Anko Watch</title>
+</head>
+<body>
+    {% include 'base/header.html' %}
+
+    <div class="header py-5" style="background-color: #2C57E0F7;">
+        <div class="container d-flex align-items-center justify-content-center">
+            <img src="https://salt.tikicdn.com/cache/w1208/ts/brickv2og/6e/28/8b/e9932d6d03815dfd8a2e78870d5c44d4.png.webp">
+        </div>
+    </div>
+
+    <div class="container mt-4 mb-5 ">
+        <div class="section-button d-flex align-items-center justify-content-center gap-5 col-lg-12 col-md-6 col-sm-6">
+            <button class="btn btn-outline-light text-dark rounded-pill border fs-5 fw-bold" style="padding: 0 45px; border: 5px solid #95A8FA !important">
+                <span style="color: #2146EC;">30 ngày<br>hoàn trả</span>
+            </button>
+            <button class="btn btn-outline-light text-dark rounded-pill border fs-5 fw-bold" style="padding: 0 45px; border: 5px solid #95A8FA !important">
+                <span style="color: #2146EC;">Đổi ý<br>miễn phí</span>
+            </button>
+            <button class="btn btn-outline-light text-dark rounded-pill border fs-5 fw-bold" style="padding: 0 25px; border: 5px solid #95A8FA !important">
+                <span style="color: #2146EC;">Hoàn 200%<br>nếu hàng giả</span>
+            </button>
+            <button class="btn btn-outline-light text-dark rounded-pill border fs-5 fw-bold" style="padding: 0 20px; border: 5px solid #95A8FA !important">
+                <span style="color: #2146EC;">Thao tác<br>online đơn giản</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="container">
+        <section class="return d-flex align-items-center justify-content-center">
+            <img src="https://salt.tikicdn.com/cache/w1208/ts/brickv2og/47/5f/32/4bda43ae2a5f4e7dbd7501976c6ff38e.png.webp">
+        </section>
+        <section class="cancel d-flex align-items-center justify-content-center">
+            <img src="https://salt.tikicdn.com/cache/w1208/ts/brickv2og/b3/3d/a7/6f77c6444c13c9654ab3830de40eb943.png.webp">
+        </section>
+        <section class="cancel d-flex align-items-center justify-content-center">
+            <img src="https://salt.tikicdn.com/cache/w1208/ts/brickv2og/ec/6e/6a/6106bc2859231d48160f16bb86eab572.png.webp">
+        </section>
+        <section class="cancel d-flex align-items-center justify-content-center">
+            <img src="https://salt.tikicdn.com/cache/w1208/ts/brickv2og/5d/90/a5/46a1c32d4adf98eeea7fcb4020515b6b.png.webp">
+        </section>
+        <div>
+            <p>Nếu có bất kì câu hỏi nào, vui lòng liên hệ tại <a href="#" class="text-decoration-none" style="color: orange">đây</a>.</p>
+        </div>
+    </div>
+    
+
+
+    {% include 'base/footer.html' %}
+</body>
+</html>
