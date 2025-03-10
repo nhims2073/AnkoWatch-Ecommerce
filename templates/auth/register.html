@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <title>Anko Watch - Đăng nhập</title>
+</head>
+<body>
+    {% include 'base/header.html' %}
+
+    <form>
+        <div class="container">
+            <div class="brand d-flex flex-column align-items-center justify-content-center">
+                <div class="logo">
+                    <img src="{{ url_for('static', filename='images/logo.png') }}" alt="logo">
+                </div>
+                <div class="slogan">
+                    <h1 class="mb-3">Đăng ký</h1>
+                </div>
+            </div>
+            <div class="input d-flex flex-row justify-content-center align-items-center">
+                <div class="col-12 col-lg-4 col-md-6 col-sm-6">
+                    <input type="email" class="form-control mb-3" placeholder="Email">
+                    <input type="text" class="form-control mb-3" placeholder="Tên đăng nhập">
+                    <input type="text" class="form-control mb-3" placeholder="Họ và tên">
+                    <input type="password" class="form-control mb-3" placeholder="Mật khẩu">
+                    <input type="password" class="form-control mb-3" placeholder="Nhập lại mật khẩu">
+                    <div>
+                        <button type="submit" class="btn btn-primary">Đăng ký</button>
+                    </div>
+                    <label class="mt-1 mb-4">
+                        Bạn đã có tài khoản? <a href="{{ url_for('login') }}">Đăng nhập</a>
+                    </label>
+                    <p style="font-size: 15px; color: #787878">Bằng việc tiếp tục, bạn đã đọc và đồng ý với 
+                        <a href="#" style="color: #787878">điều khoản sử dụng</a> và <a href="#" style="color: #787878">
+                            Chính sách bảo mật thông tin cá nhân</a> của Anko Watch</p>
+                </div>
+            </div>
+        </div>
+    </form>
+    
+
+    
+    {% include 'base/footer.html' %}
+
+</body>
+</html>

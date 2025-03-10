@@ -1,0 +1,70 @@
+<!-- templates/navbar.html -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark d-flex justify-content-between sticky-top">
+    <div class="container-fluid">
+        <a class="navbar-brand d-inline-flex justify-content-center" href="/">
+            <img class="img-fluid w-75" src="https://res.cloudinary.com/dsbfsc7ii/image/upload/v1739766135/1_ccxqkm.png" alt="Logo">
+        </a>
+        <button class="navbar-toggler float-end" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <form class="search-form w-100">
+                <input class="form-control me-1 mt-3 object-fit-cover" type="search" placeholder="Search" aria-label="Search">
+            </form>
+            <div class="navbar-right d-flex">
+                <div class="cart mt-2 mx-3 d-flex align-items-center">
+                    <a href="{{ url_for('cart') }}" class="btn-cart text-decoration-none text-white d-flex align-items-center px-2">
+                        <div class="position-relative">
+                            <i class="bi bi-cart flex-row-reverse mx-1 fs-4"></i>
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">2</span>
+                        </div>
+                    </a>
+                </div>
+                <a href="{{ url_for('login') }}" class="btn btn-outline-light btn-dark me-3 mt-2">Login</a>
+                <a href="{{ url_for('register') }}" class="btn btn-outline-warning btn-dark me-3 mt-2">Register</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<div class="sub-container m-4 bg-transparent">
+    <a href="{{ url_for('policy') }}" class="text-decoration-none mx-2 text-warning text-uppercase fs-4">Cam kết</a>
+    <a href="{{ url_for('policy') }}" class="text-decoration-none mx-2 text-dark border-end pe-3"><i class="bi bi-patch-check me-1"></i>100% hàng thật</a>
+    <a href="{{ url_for('policy') }}" class="text-decoration-none mx-2 text-dark border-end pe-3"><i class="bi bi-truck me-1"></i>Freeship mọi đơn</a>
+    <a href="{{ url_for('policy') }}" class="text-decoration-none mx-2 text-dark border-end pe-3">
+        <span class="icon-wrapper" style="position: relative; display: inline-block;">
+          <i class="bi bi-arrow-repeat" style="font-size: 1.2rem;"></i>
+          <span class="dollar-sign" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 0.6rem; font-weight: bold;">$</span>
+        </span>
+        Hoàn 200% nếu hàng giả
+    </a>
+    <a href="{{ url_for('policy') }}" class="text-decoration-none mx-2 text-dark border-end pe-3">30 ngày đổi trả</a>
+    <a href="{{ url_for('policy') }}" class="text-decoration-none mx-2 text-dark border-end pe-3"><i class="bi bi-rocket-takeoff me-1"></i>Hoả tốc 2h</a>
+    <a href="{{ url_for('policy') }}" class="text-decoration-none mx-2 text-dark"><i class="bi bi-tags-fill me-1"></i>Giá tốt nhất thị trường</a>
+</div>
+
+<button onclick="topFunction()" id="myBtn" title="Go to top" class="rounded-circle"
+style="display: none; position: fixed; bottom: 20px; right: 30px; z-index: 99; font-size: 18px;
+    border: none; outline: none; color: white; cursor: pointer; padding: 15px; background-color: orange;">
+<i class="bi bi-arrow-up "></i>
+</button>
+
+<!-- Offcanvas Menu -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="offcanvasNavbarLabel">Login</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+        <form class="search-form d-flex">
+            <input class="form-control me-2 mt-3" type="search" placeholder="Search" aria-label="Search">
+            <button class="btn btn-warning me-1 mt-3"><i class="bi bi-search"></i></button>
+        </form>
+        <div class="auth mt-3">
+            <a href="{{ url_for('login') }}" class="btn btn-outline-light btn-dark me-3 mt-2">Login</a>
+            <a href="{{ url_for('register') }}" class="btn btn-outline-warning btn-dark me-3 mt-2">Register</a>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/scripts.js') }}"></script>

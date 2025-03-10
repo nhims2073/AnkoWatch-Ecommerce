@@ -1,0 +1,53 @@
+.navbar-brand {
+    margin: 0;
+}
+
+.rating-star {
+    color: yellow;
+}
+
+.btn-search {
+    padding: 0;
+}
+
+.product-item {
+    height: 550px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.card-img-top {
+    max-width: 100%;
+    max-height: 250px;
+    object-fit: contain;
+    display: block;
+    margin: auto;
+}
+
+.card-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.d-grid .btn {
+    margin-bottom: 5px;
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type="number"] {
+    appearance: textfield;
+    -moz-appearance: textfield;
+}
+
+.breadcrumb-item a {
+    text-decoration: none;
+    color: #808089;
+}
