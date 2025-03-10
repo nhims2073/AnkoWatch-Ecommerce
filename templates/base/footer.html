@@ -19,22 +19,19 @@
             <ul><i class="bi bi-dot"></i> Phương thức thanh toán</ul>
         </div>
         <div class="col-xl-3 col-lg-3 col-md-6 col-sm-6">
-            <h5 class="ms-5">Chính sách</h5>
-            <ul><i class="bi bi-dot"></i> Chính sách bảo mật</ul>
-            <ul><i class="bi bi-dot"></i> Quy định bảo hành</ul>
-            <ul><i class="bi bi-dot"></i> Chính sách đổi trả</ul>
-            <ul><i class="bi bi-dot"></i> Điều khoản sử dụng</ul>
-            <ul><i class="bi bi-dot"></i> Chính sách vận chuyển & kiểm hàng</ul>
-            <ul><i class="bi bi-dot"></i> Tổ chức cung ứng dịch vụ logistic</ul>
-        </div>
+            <h5 class="ms-5"><a href="{{ url_for('policy') }}" class="text-decoration-none text-white">Chính sách</a></h5>
+            <ul><i class="bi bi-dot"></i> <a href="{{ url_for('policy') }}#policy-warranty" class="text-decoration-none text-white">Chính sách bảo hành</a></ul>
+            <ul><i class="bi bi-dot"></i> <a href="{{ url_for('policy') }}#policy-return" class="text-decoration-none text-white">Quy định đổi trả</a></ul>
+            <ul><i class="bi bi-dot"></i> <a href="{{ url_for('policy') }}#policy-shipping" class="text-decoration-none text-white">Chính sách vận chuyển</a></ul>
+            <ul><i class="bi bi-dot"></i> <a href="{{ url_for('policy') }}#policy-payment" class="text-decoration-none text-white">Điều khoản thanh toán</a></ul>
+            <ul><i class="bi bi-dot"></i> <a href="{{ url_for('policy') }}#policy-privacy" class="text-decoration-none text-white">Chính sách bảo mật</a></ul>
+        </div>        
     </div>
 
     <div class="row col-12 d-flex align-items-center justify-content-center mt-2">
         © 2025 - Bản quyền thuộc về Công ty TNHH Anko Watch
     </div>
 </div>
-
-
 
 <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
