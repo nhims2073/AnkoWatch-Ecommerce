@@ -6,54 +6,132 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <title>Chính sách khi mua hàng tại Anko Watch</title>
+    <title>Chính sách</title>
 </head>
 <body>
+    
     {% include 'base/header.html' %}
 
-    <div class="header py-5" style="background-color: #2C57E0F7;">
-        <div class="container d-flex align-items-center justify-content-center">
-            <img src="https://salt.tikicdn.com/cache/w1208/ts/brickv2og/6e/28/8b/e9932d6d03815dfd8a2e78870d5c44d4.png.webp">
-        </div>
-    </div>
 
-    <div class="container mt-4 mb-5 ">
-        <div class="section-button d-flex align-items-center justify-content-center gap-5 col-lg-12 col-md-6 col-sm-6">
-            <button class="btn btn-outline-light text-dark rounded-pill border fs-5 fw-bold" style="padding: 0 45px; border: 5px solid #95A8FA !important">
-                <span style="color: #2146EC;">30 ngày<br>hoàn trả</span>
-            </button>
-            <button class="btn btn-outline-light text-dark rounded-pill border fs-5 fw-bold" style="padding: 0 45px; border: 5px solid #95A8FA !important">
-                <span style="color: #2146EC;">Đổi ý<br>miễn phí</span>
-            </button>
-            <button class="btn btn-outline-light text-dark rounded-pill border fs-5 fw-bold" style="padding: 0 25px; border: 5px solid #95A8FA !important">
-                <span style="color: #2146EC;">Hoàn 200%<br>nếu hàng giả</span>
-            </button>
-            <button class="btn btn-outline-light text-dark rounded-pill border fs-5 fw-bold" style="padding: 0 20px; border: 5px solid #95A8FA !important">
-                <span style="color: #2146EC;">Thao tác<br>online đơn giản</span>
-            </button>
-        </div>
-    </div>
+    <!-- Main Index -->
+    <hr>
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <h1 class="mb-4 text-center" style="font-size: 2.5rem;">Chính sách khi mua hàng tại Anko Watch</h1>
+                <p class="lead text-center" style="font-size: 1.5rem;"></p>
+                    Chúng tôi cam kết mang đến cho khách hàng những sản phẩm chất lượng và dịch vụ tốt nhất. 
+                    Dưới đây là các chính sách chi tiết khi mua hàng tại Anko Watch.
+                </p>
 
-    <div class="container">
-        <section class="return d-flex align-items-center justify-content-center">
-            <img src="https://salt.tikicdn.com/cache/w1208/ts/brickv2og/47/5f/32/4bda43ae2a5f4e7dbd7501976c6ff38e.png.webp">
-        </section>
-        <section class="cancel d-flex align-items-center justify-content-center">
-            <img src="https://salt.tikicdn.com/cache/w1208/ts/brickv2og/b3/3d/a7/6f77c6444c13c9654ab3830de40eb943.png.webp">
-        </section>
-        <section class="cancel d-flex align-items-center justify-content-center">
-            <img src="https://salt.tikicdn.com/cache/w1208/ts/brickv2og/ec/6e/6a/6106bc2859231d48160f16bb86eab572.png.webp">
-        </section>
-        <section class="cancel d-flex align-items-center justify-content-center">
-            <img src="https://salt.tikicdn.com/cache/w1208/ts/brickv2og/5d/90/a5/46a1c32d4adf98eeea7fcb4020515b6b.png.webp">
-        </section>
-        <div>
-            <p>Nếu có bất kì câu hỏi nào, vui lòng liên hệ tại <a href="#" class="text-decoration-none" style="color: orange">đây</a>.</p>
+                <!-- Chính sách bảo hành -->
+                <section id="policy-warranty" class="policy-section mt-5"></section>
+                    <h2 class="h4" style="font-size: 1.75rem;">1. Chính sách bảo hành</h2>
+                    <p style="font-size: 1.25rem;"></p>
+                        Tất cả sản phẩm đồng hồ tại Anko Watch đều được bảo hành chính hãng trong vòng <strong style="color: red">12 tháng</strong> kể từ ngày mua hàng. 
+                        Chính sách bảo hành bao gồm:
+                    </p>
+                    <ul style="font-size: 1.25rem;"></ul>
+                        <li><strong>Lỗi kỹ thuật từ nhà sản xuất:</strong> Máy không chạy, sai số lớn hơn mức cho phép, hỏng kim hoặc lỗi về mặt số.</li>
+                        <li><strong>Thay pin miễn phí:</strong> Trong thời gian bảo hành, nếu đồng hồ hết pin, chúng tôi hỗ trợ thay pin miễn phí.</li>
+                        <li><strong>Sửa chữa miễn phí:</strong> Nếu sản phẩm có lỗi do nhà sản xuất, chúng tôi sẽ sửa chữa hoặc thay thế linh kiện miễn phí.</li>
+                    </ul>
+                    <p style="font-size: 1.25rem;" class="mt-3"><strong class="text-uppercase" style="color: red;">Lưu ý:</strong> Chính sách bảo hành không áp dụng đối với:</p>
+                    <ul style="font-size: 1.25rem;"></ul>
+                        <li>Sản phẩm bị hư hỏng do tác động bên ngoài như rơi vỡ, va đập mạnh.</li>
+                        <li>Hư hỏng do tiếp xúc với nước (trừ các mẫu đồng hồ có khả năng chống nước theo tiêu chuẩn).</li>
+                        <li>Sản phẩm bị thay đổi, sửa chữa tại các cơ sở không phải của Anko Watch.</li>
+                    </ul>
+                    <p style="font-size: 1.25rem;"></p>
+                        Để yêu cầu bảo hành, khách hàng vui lòng mang sản phẩm đến cửa hàng hoặc gửi qua đường bưu điện kèm theo hóa đơn mua hàng và phiếu bảo hành.
+                    </p>
+                </section>
+
+                <!-- Chính sách đổi trả -->
+                <section id="policy-return" class="policy-section mt-4"></section>
+                    <h2 class="h4" style="font-size: 1.75rem;">2. Chính sách đổi trả</h2>
+                    <p style="font-size: 1.25rem;"></p>
+                        Khách hàng có thể đổi trả sản phẩm trong vòng <strong style="color: red">7 ngày</strong> kể từ ngày nhận hàng nếu sản phẩm:
+                    </p>
+                    <ul style="font-size: 1.25rem;"></ul>
+                        <li>Không đúng mẫu mã, màu sắc theo đơn đặt hàng.</li>
+                        <li>Bị lỗi kỹ thuật ngay khi mở hộp.</li>
+                        <li>Bị hư hỏng trong quá trình vận chuyển.</li>
+                    </ul>
+                    <p style="font-size: 1.25rem;" class="mt-3"><strong>Điều kiện đổi trả:</strong></p>
+                    <ul style="font-size: 1.25rem;"></ul>
+                        <li>Sản phẩm chưa qua sử dụng, còn nguyên vẹn, không có dấu hiệu bị tác động.</li>
+                        <li>Còn đầy đủ hộp đựng, tem mác, hóa đơn và phụ kiện đi kèm.</li>
+                    </ul>
+                    <p style="font-size: 1.25rem;" class="mt-3"><strong>Quy trình đổi trả:</strong></p>
+                    <ol style="font-size: 1.25rem;"></ol>
+                        <li>Liên hệ với chúng tôi qua hotline hoặc email để thông báo về tình trạng sản phẩm.</li>
+                        <li>Gửi sản phẩm về địa chỉ cửa hàng của Anko Watch.</li>
+                        <li>Chúng tôi kiểm tra sản phẩm và tiến hành đổi trả trong vòng 3 - 5 ngày làm việc.</li>
+                    </ol>
+                </section>
+
+                <!-- Chính sách vận chuyển -->
+                <section id="policy-shipping" class="policy-section mt-4"></section>
+                    <h2 class="h4" style="font-size: 1.75rem;">3. Chính sách vận chuyển</h2>
+                    <p style="font-size: 1.25rem;"></p>
+                        Anko Watch hỗ trợ <strong style="color: red">giao hàng miễn phí toàn quốc</strong> với các đơn hàng trên <strong style="color: red">1.000.000 VNĐ</strong>.
+                    </p>
+                    <p style="font-size: 1.25rem;"><strong>Thời gian giao hàng:</strong></p>
+                    <ul style="font-size: 1.25rem;"></ul>
+                        <li>Đối với khu vực nội thành: 1 - 3 ngày làm việc.</li>
+                        <li>Đối với khu vực ngoại thành và tỉnh thành khác: 3 - 5 ngày làm việc.</li>
+                    </ul>
+                    <p style="font-size: 1.25rem;" class="mt-2"><strong>Chính sách hỗ trợ nếu giao hàng chậm:</strong></p>
+                    <ul style="font-size: 1.25rem;"></ul>
+                        <li>Nếu giao hàng trễ hơn cam kết, khách hàng có thể yêu cầu hoàn tiền hoặc hủy đơn.</li>
+                        <li>Trong trường hợp lỗi từ phía nhà vận chuyển, chúng tôi sẽ hỗ trợ giải quyết trong thời gian sớm nhất.</li>
+                    </ul>
+                </section>
+
+                <!-- Chính sách thanh toán -->
+                <section id="policy-payment" class="policy-section mt-4"></section>
+                    <h2 class="h4" style="font-size: 1.75rem;">4. Chính sách thanh toán</h2>
+                    <p style="font-size: 1.25rem;">
+                        Anko Watch cung cấp nhiều phương thức thanh toán tiện lợi:
+                    </p>
+                    <ul style="font-size: 1.25rem;"></ul>
+                        <li><strong>Thanh toán khi nhận hàng (COD):</strong> Áp dụng toàn quốc.</li>
+                        <li><strong>Chuyển khoản ngân hàng:</strong> Chúng tôi sẽ xác nhận đơn hàng sau khi nhận được thanh toán.</li>
+                        <li><strong>Thanh toán qua thẻ tín dụng/ATM:</strong> Chấp nhận thanh toán qua Visa, MasterCard, và các loại thẻ nội địa.</li>
+                        <li><strong>Thanh toán qua ví điện tử:</strong> Hỗ trợ các ví như MoMo, ZaloPay, VNPay.</li>
+                    </ul>
+                    <p style="font-size: 1.25rem;" class="mt-2"><strong>Lưu ý:</strong> Chúng tôi cam kết bảo mật tuyệt đối thông tin thanh toán của khách hàng.</p>
+                </section>
+
+                <!-- Chính sách bảo mật thông tin -->
+                <section id="policy-privacy" class="policy-section mt-4"></section>
+                    <h2 class="h4" style="font-size: 1.75rem;">5. Chính sách bảo mật thông tin</h2>
+                    <p style="font-size: 1.25rem;">
+                        Anko Watch cam kết bảo vệ thông tin cá nhân của khách hàng. 
+                        Mọi thông tin thu thập sẽ chỉ được sử dụng để:
+                    </p>
+                    <ul style="font-size: 1.25rem;"></ul>
+                        <li>Xử lý đơn hàng và cung cấp dịch vụ chăm sóc khách hàng.</li>
+                        <li>Gửi thông tin khuyến mãi, ưu đãi nếu khách hàng đồng ý nhận.</li>
+                        <li>Tuyệt đối không chia sẻ, mua bán thông tin khách hàng với bên thứ ba.</li>
+                    </ul>
+                </section>
+
+                <p class="mt-5 text-center" style="font-size: 1.5rem;">
+                    Nếu có bất kỳ câu hỏi hoặc cần hỗ trợ, quý khách vui lòng liên hệ với chúng tôi qua hotline hoặc email. 
+                    Anko Watch luôn sẵn sàng phục vụ quý khách!
+                </p>
+            </div>
         </div>
     </div>
     
 
-
     {% include 'base/footer.html' %}
+
+    <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    
 </body>
 </html>
