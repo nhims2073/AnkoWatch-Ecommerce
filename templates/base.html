@@ -9,7 +9,8 @@
   <title>Anko Watch - Trang chủ</title>
 </head>
 <body>
-    {% include 'base/header.html' %}
+
+  {% include 'base/header.html' %}
 
     <!-- Main Index -->
     <!-- Carousel -->
@@ -266,7 +267,7 @@
     <div class="top-sale mb-2 bg-warning py-4 rounded mx-auto" style="max-width: 1300px;">
       <div class="bg d-flex justify-content-center align-items-center">
         <div class="content fs-3 text-uppercase text-white">
-            top sản phẩm bán chạy
+            sản phẩm đang khuyến mãi
         </div>
       </div>
     </div>
@@ -274,186 +275,213 @@
     <!-- top sale -->
     <div class="container mb-5">
       <div class="row">
-        <div class="col-xl-3 col-lg-4 col-md-6 mt-3">
-          <div class="card product-item flex-fill" >
-            <a href="{{ url_for('product_detail', product_id=1) }}">
-              <img src="https://res.cloudinary.com/dsbfsc7ii/image/upload/v1739441422/xikpgznewbvnjd0syoyz.png" class="card-img-top mt-2 m-auto" alt="...">
-            </a>
-            <div class="card-body d-flex flex-grow-1 flex-column justify-content-between">
-              <h6 class="card-subtitle mb-2 text-muted">Watch</h6>
-              <h5 class="card-title">
-                <a href="{{ url_for('product_detail', product_id=1) }}" class="text-decoration-none text-dark">Frederique Constant Classics</a>
-              </h5>
-              <p class="card-text">25000$
-                <span class="float-end rating-star">
-                  <i class="bi bi-star-fill"></i>
-                  <i class="bi bi-star-fill"></i>
-                  <i class="bi bi-star-fill"></i>
-                  <i class="bi bi-star-fill"></i>
-                  <i class="bi bi-star-fill"></i>
-                </span>
-              </p>     
-              <div class="d-grid gap-2">
-                <a class="btn btn-outline-primary" href="#" role="button">Add to cart</a>        
-                <a class="btn btn-outline-info">Wishlist</a>
-              </div>  
-            </div>
+      <div class="col-xl-3 col-lg-4 col-md-6 mt-3 position-relative">
+        <div class="card product-item flex-fill">
+          <!-- Hiển thị phần trăm giảm giá -->
+          <div class="discount-badge">-35%</div>
+          <a href="{{ url_for('product_detail', product_id=1) }}">
+            <img src="https://res.cloudinary.com/dsbfsc7ii/image/upload/v1739441422/xikpgznewbvnjd0syoyz.png" class="card-img-top mt-2 m-auto" alt="...">
+          </a>
+          <div class="card-body d-flex flex-grow-1 flex-column justify-content-between">
+            <h6 class="card-subtitle mb-2 text-muted">Watch</h6>
+            <h5 class="card-title">
+              <a href="{{ url_for('product_detail', product_id=1) }}" class="text-decoration-none text-dark">
+                Frederique Constant Classics
+              </a>
+            </h5>
+            <p class="card-text">
+              <span class="original-price">30000$</span>
+              <span class="discounted-price">25000$</span>
+              <span class="float-end rating-star">
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+              </span>
+            </p>     
+            <div class="d-grid gap-2">
+              <a class="btn btn-outline-primary" href="#" role="button">Add to cart</a>        
+              <a class="btn btn-outline-info">Wishlist</a>
+            </div>  
           </div>
         </div>
-          <div class="col-xl-3 col-lg-4 col-md-6 mt-3">
-            <div class="card product-item flex-fill">
-              <img src="https://res.cloudinary.com/dsbfsc7ii/image/upload/v1739430998/Frederique_Constant_Classics_vnjbwh.png" class="card-img-top mt-2 m-auto" alt="...">
-              <div class="card-body d-flex flex-grow-1 flex-column justify-content-between">
-                <h6 class="card-subtitle mb-2 text-muted">Watch</h6>
-                <h5 class="card-title">Frederique Constant Classics</h5>
-                <p class="card-text">25000$
-                  <span class="float-end rating-star">
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                  </span>
-                </p>     
-                <div class="d-grid gap-2">
-                  <a class="btn btn-outline-primary" href="#" role="button">Add to cart</a>        
-                  <a class="btn btn-outline-info">Wishlist</a>
-                </div>  
-              </div>
-            </div>
+      </div>
+      <div class="col-xl-3 col-lg-4 col-md-6 mt-3 position-relative">
+        <div class="card product-item flex-fill">
+          <div class="discount-badge">-35%</div>
+          <img src="https://res.cloudinary.com/dsbfsc7ii/image/upload/v1739430998/Frederique_Constant_Classics_vnjbwh.png" class="card-img-top mt-2 m-auto" alt="...">
+          <div class="card-body d-flex flex-grow-1 flex-column justify-content-between">
+          <h6 class="card-subtitle mb-2 text-muted">Watch</h6>
+          <h5 class="card-title">Frederique Constant Classics</h5>
+          <p class="card-text">
+            <span class="original-price">30000$</span>
+            <span class="discounted-price">25000$</span>
+            <span class="float-end rating-star">
+            <i class="bi bi-star-fill"></i>
+            <i class="bi bi-star-fill"></i>
+            <i class="bi bi-star-fill"></i>
+            <i class="bi bi-star-fill"></i>
+            <i class="bi bi-star-fill"></i>
+            </span>
+          </p>     
+          <div class="d-grid gap-2">
+            <a class="btn btn-outline-primary" href="#" role="button">Add to cart</a>        
+            <a class="btn btn-outline-info">Wishlist</a>
+          </div>  
           </div>
-          <div class="col-xl-3 col-lg-4 col-md-6 mt-3">
-            <div class="card product-item flex-fill">
-              <img src="https://res.cloudinary.com/dsbfsc7ii/image/upload/v1739430998/Jacques_Lemans_London_JL.1-1936B_lrnqje.png" class="card-img-top mt-2 m-auto" alt="...">
-              <div class="card-body d-flex flex-grow-1 flex-column justify-content-between">
-                <h6 class="card-subtitle mb-2 text-muted">Watch</h6>
-                <h5 class="card-title">Jacques Lemans London JL.1-1936B</h5>
-                <p class="card-text">28000$
-                  <span class="float-end rating-star">
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                  </span>
-                </p>     
-                <div class="d-grid gap-2">
-                  <a class="btn btn-outline-primary" href="#" role="button">Add to cart</a>        
-                  <a class="btn btn-outline-info">Wishlist</a>
-                </div>  
-              </div>
-            </div>
+        </div>
+      </div>
+      <div class="col-xl-3 col-lg-4 col-md-6 mt-3 position-relative">
+        <div class="card product-item flex-fill">
+          <div class="discount-badge">-35%</div>
+          <img src="https://res.cloudinary.com/dsbfsc7ii/image/upload/v1739430998/Jacques_Lemans_London_JL.1-1936B_lrnqje.png" class="card-img-top mt-2 m-auto" alt="...">
+          <div class="card-body d-flex flex-grow-1 flex-column justify-content-between">
+          <h6 class="card-subtitle mb-2 text-muted">Watch</h6>
+          <h5 class="card-title">Jacques Lemans London JL.1-1936B</h5>
+          <p class="card-text">
+            <span class="original-price">35000$</span>
+            <span class="discounted-price">28000$</span>
+            <span class="float-end rating-star">
+            <i class="bi bi-star-fill"></i>
+            <i class="bi bi-star-fill"></i>
+            <i class="bi bi-star-fill"></i>
+            <i class="bi bi-star-fill"></i>
+            <i class="bi bi-star-fill"></i>
+            </span>
+          </p>     
+          <div class="d-grid gap-2">
+            <a class="btn btn-outline-primary" href="#" role="button">Add to cart</a>        
+            <a class="btn btn-outline-info">Wishlist</a>
+          </div>  
           </div>
-          <div class="col-xl-3 col-lg-4 col-md-6 mt-3">
-            <div class="card product-item flex-fill">
-              <img src="https://res.cloudinary.com/dsbfsc7ii/image/upload/v1739430998/Audemas_Piguet_Royal_77451ST_cqfjza.png" class="card-img-top mt-2 m-auto" alt="...">
-              <div class="card-body d-flex flex-grow-1 flex-column justify-content-between">
-                <h6 class="card-subtitle mb-2 text-muted">Watch</h6>
-                <h5 class="card-title">Audemas Piguet Royal 77451ST</h5>
-                <p class="card-text">35000$
-                  <span class="float-end rating-star">
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                  </span>
-                </p>     
-                <div class="d-grid gap-2">
-                  <a class="btn btn-outline-primary" href="#" role="button">Add to cart</a>        
-                  <a class="btn btn-outline-info">Wishlist</a>
-                </div>  
-              </div>
-            </div>
+        </div>
+      </div>
+      <div class="col-xl-3 col-lg-4 col-md-6 mt-3 position-relative">
+        <div class="card product-item flex-fill">
+          <div class="discount-badge">-35%</div>
+          <img src="https://res.cloudinary.com/dsbfsc7ii/image/upload/v1739430998/Audemas_Piguet_Royal_77451ST_cqfjza.png" class="card-img-top mt-2 m-auto" alt="...">
+          <div class="card-body d-flex flex-grow-1 flex-column justify-content-between">
+          <h6 class="card-subtitle mb-2 text-muted">Watch</h6>
+          <h5 class="card-title">Audemas Piguet Royal 77451ST</h5>
+          <p class="card-text">
+            <span class="original-price">45000$</span>
+            <span class="discounted-price">35000$</span>
+            <span class="float-end rating-star">
+            <i class="bi bi-star-fill"></i>
+            <i class="bi bi-star-fill"></i>
+            <i class="bi bi-star-fill"></i>
+            <i class="bi bi-star-fill"></i>
+            <i class="bi bi-star-fill"></i>
+            </span>
+          </p>     
+          <div class="d-grid gap-2">
+            <a class="btn btn-outline-primary" href="#" role="button">Add to cart</a>        
+            <a class="btn btn-outline-info">Wishlist</a>
+          </div>  
           </div>
-          <div class="col-xl-3 col-lg-4 col-md-6 mt-3">
-            <div class="card product-item flex-fill">
-              <img src="https://images.unsplash.com/photo-1561154464-82e9adf32764?ixlib=rb-1.2.1&ixid=eyJapcGXiZJoMTIwN30&auto=format&fit=crop&w=800&q=60" class="card-img-top m-auto" alt="...">
-              <div class="card-body d-flex flex-grow-1 flex-column justify-content-between">
-                <h6 class="card-subtitle mb-2 text-muted">Camera</h6>
-                <h5 class="card-title">Sony WX-75</h5>
-                <p class="card-text">100$
-                  <span class="float-end rating-star">
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                  </span>
-                </p>     
-                <div class="d-grid gap-2">
-                  <a class="btn btn-outline-primary" href="#" role="button">Add to cart</a>        
-                  <a class="btn btn-outline-info">Wishlist</a>
-                </div>  
-              </div>
-            </div>
+        </div>
+      </div>
+      <div class="col-xl-3 col-lg-4 col-md-6 mt-3 position-relative">
+        <div class="card product-item flex-fill">
+        <div class="discount-badge">-35%</div>
+        <img src="https://images.unsplash.com/photo-1561154464-82e9adf32764?ixlib=rb-1.2.1&ixid=eyJapcGXiZJoMTIwN30&auto=format&fit=crop&w=800&q=60" class="card-img-top m-auto" alt="...">
+        <div class="card-body d-flex flex-grow-1 flex-column justify-content-between">
+          <h6 class="card-subtitle mb-2 text-muted">Camera</h6>
+          <h5 class="card-title">Sony WX-75</h5>                
+          <p class="card-text">
+          <span class="original-price">150$</span>
+          <span class="discounted-price">100$</span>
+          <span class="float-end rating-star">
+            <i class="bi bi-star-fill"></i>
+            <i class="bi bi-star-fill"></i>
+            <i class="bi bi-star-fill"></i>
+            <i class="bi bi-star-fill"></i>
+            <i class="bi bi-star-fill"></i>
+          </span>
+          </p>     
+          <div class="d-grid gap-2">
+          <a class="btn btn-outline-primary" href="#" role="button">Add to cart</a>        
+          <a class="btn btn-outline-info">Wishlist</a>
+          </div>  
+        </div>
+        </div>
+      </div>
+      <div class="col-xl-3 col-lg-4 col-md-6 mt-3 position-relative">
+        <div class="card product-item">
+          <div class="discount-badge">-35%</div>
+          <img src="https://images.unsplash.com/photo-1561154464-82e9adf32764?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=60" class="card-img-top m-auto" alt="...">
+          <div class="card-body d-flex flex-grow-1 flex-column justify-content-between">
+          <h6 class="card-subtitle mb-2 text-muted">Camera</h6>
+          <h5 class="card-title">Sony WX-75</h5>
+          <p class="card-text">
+            <span class="original-price">150$</span>
+            <span class="discounted-price">100$</span>
+            <span class="float-end rating-star">
+            <i class="bi bi-star-fill"></i>
+            <i class="bi bi-star-fill"></i>
+            <i class="bi bi-star-fill"></i>
+            <i class="bi bi-star-fill"></i>
+            <i class="bi bi-star-fill"></i>
+            </span>
+          </p>     
+          <div class="d-grid gap-2">
+            <a class="btn btn-outline-primary" href="#" role="button">Add to cart</a>        
+            <a class="btn btn-outline-info">Wishlist</a>
+          </div>  
           </div>
-          <div class="col-xl-3 col-lg-4 col-md-6 mt-3">
-            <div class="card product-item">
-              <img src="https://images.unsplash.com/photo-1561154464-82e9adf32764?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=60" class="card-img-top m-auto" alt="...">
-              <div class="card-body d-flex flex-grow-1 flex-column justify-content-between">
-                <h6 class="card-subtitle mb-2 text-muted">Camera</h6>
-                <h5 class="card-title">Sony WX-75</h5>
-                <p class="card-text">100$
-                  <span class="float-end rating-star">
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                  </span>
-                </p>     
-                <div class="d-grid gap-2">
-                  <a class="btn btn-outline-primary" href="#" role="button">Add to cart</a>        
-                  <a class="btn btn-outline-info">Wishlist</a>
-                </div>  
-              </div>
-            </div>
+        </div>
+      </div>
+      <div class="col-xl-3 col-lg-4 col-md-6 mt-3 position-relative">
+        <div class="card product-item flex-fill">
+          <div class="discount-badge">-35%</div>
+          <img src="https://images.unsplash.com/photo-1561154464-82e9adf32764?ixlib=rb-1.2.1&ixid=eyJapcGXiZJoMTIwN30&auto=format&fit=crop&w=800&q=60" class="card-img-top m-auto" alt="...">
+          <div class="card-body d-flex flex-grow-1 flex-column justify-content-between">
+          <h6 class="card-subtitle mb-2 text-muted">Camera</h6>
+          <h5 class="card-title">Sony WX-75</h5>
+          <p class="card-text">
+            <span class="original-price">150$</span>
+            <span class="discounted-price">100$</span>
+            <span class="float-end rating-star">
+            <i class="bi bi-star-fill"></i>
+            <i class="bi bi-star-fill"></i>
+            <i class="bi bi-star-fill"></i>
+            <i class="bi bi-star-fill"></i>
+            <i class="bi bi-star-fill"></i>
+            </span>
+          </p>     
+          <div class="d-grid gap-2">
+            <a class="btn btn-outline-primary" href="#" role="button">Add to cart</a>        
+            <a class="btn btn-outline-info">Wishlist</a>
+          </div>  
           </div>
-          <div class="col-xl-3 col-lg-4 col-md-6 mt-3">
-            <div class="card product-item flex-fill">
-              <img src="https://images.unsplash.com/photo-1561154464-82e9adf32764?ixlib=rb-1.2.1&ixid=eyJapcGXiZJoMTIwN30&auto=format&fit=crop&w=800&q=60" class="card-img-top m-auto" alt="...">
-              <div class="card-body d-flex flex-grow-1 flex-column justify-content-between">
-                <h6 class="card-subtitle mb-2 text-muted">Camera</h6>
-                <h5 class="card-title">Sony WX-75</h5>
-                <p class="card-text">100$
-                  <span class="float-end rating-star">
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                  </span>
-                </p>     
-                <div class="d-grid gap-2">
-                  <a class="btn btn-outline-primary" href="#" role="button">Add to cart</a>        
-                  <a class="btn btn-outline-info">Wishlist</a>
-                </div>  
-              </div>
-            </div>
+        </div>
+      </div>
+      <div class="col-xl-3 col-lg-4 col-md-6 mt-3 position-relative">
+        <div class="card product-item">
+          <div class="discount-badge">-35%</div>
+          <img src="https://images.unsplash.com/photo-1561154464-82e9adf32764?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=60" class="card-img-top m-auto" alt="...">
+          <div class="card-body d-flex flex-grow-1 flex-column justify-content-between">
+          <h6 class="card-subtitle mb-2 text-muted">Camera</h6>
+          <h5 class="card-title">Sony WX-75</h5>
+          <p class="card-text">
+            <span class="original-price">150$</span>
+            <span class="discounted-price">100$</span>
+            <span class="float-end rating-star">
+            <i class="bi bi-star-fill"></i>
+            <i class="bi bi-star-fill"></i>
+            <i class="bi bi-star-fill"></i>
+            <i class="bi bi-star-fill"></i>
+            <i class="bi bi-star-fill"></i>
+            </span>
+          </p>     
+          <div class="d-grid gap-2">
+            <a class="btn btn-outline-primary" href="#" role="button">Add to cart</a>        
+            <a class="btn btn-outline-info">Wishlist</a>
+          </div>  
           </div>
-          <div class="col-xl-3 col-lg-4 col-md-6 mt-3">
-            <div class="card product-item">
-              <img src="https://images.unsplash.com/photo-1561154464-82e9adf32764?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=60" class="card-img-top m-auto" alt="...">
-              <div class="card-body d-flex flex-grow-1 flex-column justify-content-between">
-                <h6 class="card-subtitle mb-2 text-muted">Camera</h6>
-                <h5 class="card-title">Sony WX-75</h5>
-                <p class="card-text">100$
-                  <span class="float-end rating-star">
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                  </span>
-                </p>     
-                <div class="d-grid gap-2">
-                  <a class="btn btn-outline-primary" href="#" role="button">Add to cart</a>        
-                  <a class="btn btn-outline-info">Wishlist</a>
-                </div>  
-              </div>
-            </div>
-          </div>
+        </div>
+      </div>
       </div>
     </div>
 
@@ -462,29 +490,30 @@
       <hr class="mb-4">
 
       <!-- Three columns of text below the carousel -->
-      <div class="row">
+      <div class="row text-center justify-content-center"> 
         <div class="col-lg-4">
-          <svg class="bd-placeholder-img rounded-circle" width="140" height="140" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Placeholder: 140x140" preserveAspectRatio="xMidYMid slice" focusable="false"><title>Placeholder</title><rect width="100%" height="100%" fill="#777"></rect><text x="50%" y="50%" fill="#777" dy=".3em">140x140</text></svg>
-  
-          <h2>Heading</h2>
-          <p>Some representative placeholder content for the three columns of text below the carousel. This is the first column.</p>
-          <p><a class="btn btn-secondary" href="#">View details »</a></p>
-        </div><!-- /.col-lg-4 -->
+            <img src="https://res.cloudinary.com/dsbfsc7ii/image/upload/v1740714107/dh_l9u5jy.jpg" 
+                 class="rounded-circle img-hover" width="140" height="140">
+            <h2>#1</h2>
+            <p>Content #1</p>
+            <p><a class="btn btn-secondary" href="#">View details »</a></p>
+        </div>
         <div class="col-lg-4">
-          <svg class="bd-placeholder-img rounded-circle" width="140" height="140" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Placeholder: 140x140" preserveAspectRatio="xMidYMid slice" focusable="false"><title>Placeholder</title><rect width="100%" height="100%" fill="#777"></rect><text x="50%" y="50%" fill="#777" dy=".3em">140x140</text></svg>
-  
-          <h2>Heading</h2>
-          <p>Another exciting bit of representative placeholder content. This time, we've moved on to the second column.</p>
-          <p><a class="btn btn-secondary" href="#">View details »</a></p>
-        </div><!-- /.col-lg-4 -->
+          <img src="https://res.cloudinary.com/dsbfsc7ii/image/upload/v1740714107/dh_l9u5jy.jpg" class="rounded-circle img-hover" width="140" height="140">
+            <title>Placeholder</title>
+            <h2>#2</h2>
+            <p>Content #2</p>
+            <p><a class="btn btn-secondary" href="#">View details »</a></p>
+        </div>
         <div class="col-lg-4">
-          <svg class="bd-placeholder-img rounded-circle" width="140" height="140" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Placeholder: 140x140" preserveAspectRatio="xMidYMid slice" focusable="false"><title>Placeholder</title><rect width="100%" height="100%" fill="#777"></rect><text x="50%" y="50%" fill="#777" dy=".3em">140x140</text></svg>
-  
-          <h2>Heading</h2>
-          <p>And lastly this, the third column of representative placeholder content.</p>
+          <img src="https://res.cloudinary.com/dsbfsc7ii/image/upload/v1740714107/dh_l9u5jy.jpg" class="rounded-circle img-hover" width="140" height="140">
+          <h2>#3</h2>
+          <p>Content #3</p>
           <p><a class="btn btn-secondary" href="#">View details »</a></p>
-        </div><!-- /.col-lg-4 -->
-      </div><!-- /.row -->
+        </div>
+    </div>
+    
+    
   
       <!-- START THE FEATURETTES -->
   
@@ -566,8 +595,9 @@
         </div>
       </div>
     </div>
-
     {% include 'base/footer.html' %}
+
+
 
 </body>
 </html>
