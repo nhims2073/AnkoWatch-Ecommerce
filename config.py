@@ -20,9 +20,9 @@ class Config:
     JWT_SESSION_COOKIE = True
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(minutes=30)
 
-    CLOUDINARY_CLOUD_NAME = os.getenv("CLOUDINARY_CLOUD_NAME")
-    CLOUDINARY_API_KEY = os.getenv("CLOUDINARY_API_KEY")
-    CLOUDINARY_API_SECRET = os.getenv("CLOUDINARY_API_SECRET")
+    CLOUDINARY_CLOUD_NAME = os.getenv("CLOUDINARY_CLOUD_NAME", "dsbfsc7ii")
+    CLOUDINARY_API_KEY = os.getenv("CLOUDINARY_API_KEY", "234463982451924")
+    CLOUDINARY_API_SECRET = os.getenv("CLOUDINARY_API_SECRET", "oRvQloFeWg2MelgACzu-ev2Kq2U")
 
 # Kết nối đến MongoDB Atlas
 client = MongoClient(Config.MONGO_URI)

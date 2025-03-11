@@ -1,4 +1,9 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request, make_response, jsonify, flash, redirect, url_for, session
+from services.middleware import role_required, cache_middleware
+from werkzeug.security import check_password_hash
+from flask_jwt_extended import create_access_token
+from app import mongo, app
+import json, os
 
 app = Flask(__name__)
 
@@ -14,6 +19,10 @@ def login():
 @app.route('/register')
 def register():
     return render_template('auth/register.html')
+
+@app.route('/forgot-password')
+def forgot_password():
+    return render_template('auth/forgot-password.html')
 
 @app.route('/product/<int:product_id>')
 def product_detail(product_id):
@@ -35,7 +44,7 @@ def checkout():
 def policy():
     return render_template('policy/policy.html')
 
-# Admin Routes
+# Admin Routes (Chỉ cho admin)
 @app.route('/admin/dashboard')
 def dashboard():
     return render_template('admin/dashboard.html')
