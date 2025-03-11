@@ -47,7 +47,7 @@ Anko Watch is a web application developed using **Flask** for the backend and **
 
 
 ## Technologies Used
-**Backend**: Flask
-**Database**: MongoDB
-**Payment Integration**: VNPAY
-**Frontend**: HTML, CSS, JavaScript
+**Backend**: Flask  
+**Database**: MongoDB  
+**Payment Integration**: VNPAY  
+**Frontend**: HTML, CSS, JavaScript  
