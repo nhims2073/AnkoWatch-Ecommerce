@@ -11,14 +11,13 @@
 <body>
     {% include 'base/header.html' %}
 
+
+    <hr>
     <form>
         <div class="container">
             <div class="brand d-flex flex-column align-items-center justify-content-center">
-                <div class="logo">
-                    <img src="{{ url_for('static', filename='images/logo.png') }}" alt="logo">
-                </div>
-                <div class="slogan">
-                    <h1 class="mb-3">Đăng ký</h1>
+                <div class="slogan my-3 text-info">
+                    <h1 class="mb-3 text-uppercase">Đăng ký</h1>
                 </div>
             </div>
             <div class="input d-flex flex-row justify-content-center align-items-center">
@@ -35,7 +34,7 @@
                         Bạn đã có tài khoản? <a href="{{ url_for('login') }}">Đăng nhập</a>
                     </label>
                     <p style="font-size: 15px; color: #787878">Bằng việc tiếp tục, bạn đã đọc và đồng ý với 
-                        <a href="#" style="color: #787878">điều khoản sử dụng</a> và <a href="#" style="color: #787878">
+                        <a href="{{ url_for('policy') }}" style="color: #787878">điều khoản sử dụng</a> và <a href="{{ url_for('policy') }}#policy-privacy" style="color: #787878">
                             Chính sách bảo mật thông tin cá nhân</a> của Anko Watch</p>
                 </div>
             </div>
