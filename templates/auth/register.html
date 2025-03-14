@@ -14,28 +14,82 @@
 
     <hr>
     <form>
-        <div class="container">
-            <div class="brand d-flex flex-column align-items-center justify-content-center">
-                <div class="slogan my-3 text-info">
-                    <h1 class="mb-3 text-uppercase">Đăng ký</h1>
-                </div>
-            </div>
-            <div class="input d-flex flex-row justify-content-center align-items-center">
-                <div class="col-12 col-lg-4 col-md-6 col-sm-6">
-                    <input type="email" class="form-control mb-3" placeholder="Email">
-                    <input type="text" class="form-control mb-3" placeholder="Tên đăng nhập">
-                    <input type="text" class="form-control mb-3" placeholder="Họ và tên">
-                    <input type="password" class="form-control mb-3" placeholder="Mật khẩu">
-                    <input type="password" class="form-control mb-3" placeholder="Nhập lại mật khẩu">
-                    <div>
-                        <button type="submit" class="btn btn-primary">Đăng ký</button>
+        <div class="container py-5">
+            <div class="row justify-content-center">
+                <div class="col-12 col-md-8 col-lg-6">
+                    <div class="card shadow-lg border-0 rounded-lg">
+                        <div class="card-body p-5">
+                            <!-- Logo và tiêu đề -->
+                            <div class="text-center mb-4">
+                                <h2 class="text-primary fw-bold mb-3">ĐĂNG KÝ TÀI KHOẢN</h2>
+                                <p class="text-muted">Tạo tài khoản để trải nghiệm dịch vụ của Anko Watch</p>
+                            </div>
+    
+                            <!-- Form đăng ký -->
+                            <form>
+                                <div class="form-floating mb-3">
+                                    <input type="email" class="form-control" id="email" placeholder="Email">
+                                    <label for="email">Email</label>
+                                </div>
+    
+                                <div class="form-floating mb-3">
+                                    <input type="text" class="form-control" id="username" placeholder="Tên đăng nhập">
+                                    <label for="username">Tên đăng nhập</label>
+                                </div>
+    
+                                <div class="form-floating mb-3">
+                                    <input type="text" class="form-control" id="fullname" placeholder="Họ và tên">
+                                    <label for="fullname">Họ và tên</label>
+                                </div>
+    
+                                <div class="form-floating mb-3">
+                                    <input type="password" class="form-control" id="password" placeholder="Mật khẩu">
+                                    <label for="password">Mật khẩu</label>
+                                </div>
+    
+                                <div class="form-floating mb-4">
+                                    <input type="password" class="form-control" id="confirm-password" placeholder="Nhập lại mật khẩu">
+                                    <label for="confirm-password">Nhập lại mật khẩu</label>
+                                </div>
+    
+                                <button type="submit" class="btn btn-primary w-100 py-2 mb-3">Đăng ký ngay</button>
+    
+                                <div class="text-center mb-3">
+                                    <span class="text-muted">Đã có tài khoản? </span>
+                                    <a href="{{ url_for('login') }}" class="text-primary text-decoration-none">Đăng nhập</a>
+                                </div>
+    
+                                <!-- Điều khoản -->
+                                <div class="text-center small text-muted">
+                                    <p>Bằng việc đăng ký, bạn đã đồng ý với 
+                                        <a href="{{ url_for('policy') }}" class="text-decoration-none">Điều khoản sử dụng</a> và 
+                                        <a href="{{ url_for('policy') }}#policy-privacy" class="text-decoration-none">Chính sách bảo mật</a> 
+                                        của Anko Watch
+                                    </p>
+                                </div>
+    
+                                <!-- Đăng ký bằng mạng xã hội -->
+                                <div class="position-relative my-4">
+                                    <hr>
+                                    <p class="text-center position-absolute top-50 start-50 translate-middle bg-white px-3 text-muted">
+                                        Hoặc đăng ký bằng
+                                    </p>
+                                </div>
+    
+                                <div class="d-flex gap-2 justify-content-center">
+                                    <a href="#" class="btn btn-outline-primary flex-grow-1">
+                                        <i class="bi bi-facebook"></i>
+                                    </a>
+                                    <a href="#" class="btn btn-outline-danger flex-grow-1">
+                                        <i class="bi bi-google"></i>
+                                    </a>
+                                    <a href="#" class="btn btn-outline-dark flex-grow-1">
+                                        <i class="bi bi-twitter-x"></i>
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
                     </div>
-                    <label class="mt-1 mb-4">
-                        Bạn đã có tài khoản? <a href="{{ url_for('login') }}">Đăng nhập</a>
-                    </label>
-                    <p style="font-size: 15px; color: #787878">Bằng việc tiếp tục, bạn đã đọc và đồng ý với 
-                        <a href="{{ url_for('policy') }}" style="color: #787878">điều khoản sử dụng</a> và <a href="{{ url_for('policy') }}#policy-privacy" style="color: #787878">
-                            Chính sách bảo mật thông tin cá nhân</a> của Anko Watch</p>
                 </div>
             </div>
         </div>
