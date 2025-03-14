@@ -2,7 +2,6 @@ from flask import Flask
 from flask_pymongo import PyMongo
 from flask_jwt_extended import JWTManager
 from flask_caching import Cache
-import cloudinary
 from config import Config
 
 # Khởi tạo ứng dụng Flask
@@ -17,3 +16,5 @@ mongo = PyMongo(app)
 # Import routes sau khi khởi tạo app (để tránh circular import)
 from routes import *
 
+if __name__ == "__main__":
+    app.run(debug=True)
