@@ -1,9 +1,8 @@
 from flask import Flask, render_template, request, make_response, jsonify, flash, redirect, url_for, session
-from services.middleware import role_required, cache_middleware
-from werkzeug.security import check_password_hash
-from flask_jwt_extended import create_access_token
+import services.middleware
+import werkzeug.security
+import flask_jwt_extended
 from app import mongo, app
-import json, os
 
 app = Flask(__name__)
 
@@ -35,6 +34,10 @@ def info():
 @app.route('/cart')
 def cart():
     return render_template('cart/cart.html')
+
+@app.route('/search')
+def search():
+    return render_template('product/search.html')
 
 @app.route('/checkout')
 def checkout():
