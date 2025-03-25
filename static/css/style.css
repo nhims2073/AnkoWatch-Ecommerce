@@ -165,3 +165,17 @@ input[type="number"] {
 .dropdown-menu ul li a:hover {
     color: #ee4d2d !important;
 }
+
+.btn-fn {
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.user-dropdown .dropdown-menu {
+    max-width: 250px !important; /* Điều chỉnh chiều dài dropdown */
+}
+
+.list-group-item-logout:hover {
+    background-color: #ee4d2d !important;
+    color: white !important;
+}
