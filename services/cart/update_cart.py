@@ -1,4 +1,3 @@
-from venv import logger
 from bson import ObjectId
 from flask import jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
@@ -35,9 +34,7 @@ def update_cart_exc(product_id, action):
             {"$set": {"products": products}}
         )
 
-        logger.info(f"Updated quantity for product {product_id} in cart for user {user_id}")
         return jsonify({"success": True, "message": "Cập nhật số lượng thành công!"})
 
     except Exception as e:
-        logger.error(f"Error updating cart: {str(e)}")
         return jsonify({"success": False, "message": f"Có lỗi xảy ra: {str(e)}"}), 500
