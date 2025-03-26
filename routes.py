@@ -10,6 +10,7 @@ from app import app, mongo
 from services.auth.register_exc import register_exc
 from services.auth.login_exc import login_exc
 from flask_login import login_required, logout_user
+from services.product.search_exc import search_exc
 
 # User Routes
 @app.route('/')
@@ -58,13 +59,13 @@ def forgot_password():
 def reset_password():
     return render_template('auth/reset-password.html')
 
-@app.route('/product/<product_id>')  # Không ép kiểu int
+@app.route('/product/<product_id>')
 def product_detail(product_id):
     try:
         product = mongo.db.products.find_one({"_id": ObjectId(product_id)})
         if product:
-            product['_id'] = str(product['_id'])  # Chuyển ObjectId thành string để dùng trong template
-            return render_template("product_detail.html", product=product)
+            product['_id'] = str(product['_id'])
+            return render_template("product/product_detail.html", product=product)
         else:
             return "Sản phẩm không tồn tại", 404
     except:
@@ -173,7 +174,21 @@ def remove_from_cart_route(product_id):
 
 @app.route('/search')
 def search():
-    return render_template('product/search.html')
+    products = search_exc()
+    # Lấy các tham số để hiển thị lại trên giao diện
+    query = request.args.get('q', '')
+    category = request.args.get('category', '')
+    sort = request.args.get('sort', 'relevance')
+    brands = request.args.getlist('brand')
+    price_ranges = request.args.getlist('price_range')
+
+    return render_template('product/search.html', 
+                          products=products, 
+                          query=query, 
+                          category=category, 
+                          sort=sort, 
+                          brands=brands, 
+                          price_ranges=price_ranges)
 
 @app.route('/checkout')
 def checkout():
