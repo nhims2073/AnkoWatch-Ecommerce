@@ -2,6 +2,11 @@ import json
 from bson import ObjectId
 from flask import render_template, request, make_response, flash, redirect, url_for, session
 from flask_jwt_extended import get_jwt_identity, jwt_required
+from services.account import change_password_exc
+from services.account.account_exc import get_user_info, update_user_info
+from services.account.address_exc import add_address_exc, delete_address_exc, get_addresses_exc, update_address_exc
+from services.account.favourites_exc import get_favorite_products, remove_from_favorites
+from services.account.orders_exc import get_orders
 from services.cart import add_to_cart, remove_cart, update_cart
 from services.cart.cart import cart_exc
 from services.cart.cart_count import cart_count_exc
@@ -10,6 +15,7 @@ from app import app, mongo
 from services.auth.register_exc import register_exc
 from services.auth.login_exc import login_exc
 from flask_login import login_required, logout_user
+from services.product.product_detail_exc import product_detail_exc
 from services.product.search_exc import search_exc
 
 # User Routes
@@ -61,79 +67,99 @@ def reset_password():
 
 @app.route('/product/<product_id>')
 def product_detail(product_id):
-    try:
-        product = mongo.db.products.find_one({"_id": ObjectId(product_id)})
-        if product:
-            product['_id'] = str(product['_id'])
-            return render_template("product/product_detail.html", product=product)
-        else:
-            return "Sản phẩm không tồn tại", 404
-    except:
-        return "Lỗi truy vấn sản phẩm", 500
+    return product_detail_exc(product_id)
 
 @app.route('/cart-count', methods=['GET'])
 @jwt_required()
 def cart_count():
     return cart_count_exc()
 
-@app.route('/account')
+@app.route('/account', methods=['GET', 'POST'])
 @jwt_required()
 def account():
-    return render_template('account/account.html')
+    if not session.get("user_id"):
+        return redirect(url_for('auth.login'))
+
+    if request.method == 'POST':
+        result = update_user_info()
+        user = get_user_info()
+        return render_template('account/account.html', current_user=user, **result)
+
+    user = get_user_info()
+    return render_template('account/account.html', current_user=user)
 
 @app.route('/orders')
 @jwt_required()
 def orders():
-    try:
-        user_id = get_jwt_identity()  # user_id là chuỗi
+    if not session.get("user_id"):
+        return redirect(url_for('auth.login'))
 
-        orders = list(mongo.db.orders.find({"user_id": ObjectId(user_id)}))
-        for order in orders:
-            order['_id'] = str(order['_id'])
-            order['user_id'] = str(order['user_id'])
-        return render_template('account/list-orders.html', orders=orders)
-    except Exception as e:
-        flash(f"Đã xảy ra lỗi khi tải danh sách đơn hàng: {str(e)}", "danger")
-        return render_template('account/list-orders.html', orders=[])
+    orders = get_orders()
+    return render_template('account/list-orders.html', current_user=get_user_info(), orders=orders)
 
-@app.route('/favourites')
+@app.route('/favourites', methods=['GET', 'POST'])
 @jwt_required()
 def favourites():
-    try:
-        current_user = get_jwt_identity()
-        user_id = current_user['user_id']
+    if not session.get("user_id"):
+        return redirect(url_for('auth.login'))
 
-        favorites = list(mongo.db.favorites.find({"user_id": ObjectId(user_id)}))
-        product_ids = [item['product_id'] for item in favorites]
-        valid_product_ids = [ObjectId(pid) for pid in product_ids if ObjectId.is_valid(pid)]
-        products = list(mongo.db.products.find({"_id": {"$in": valid_product_ids}}))
-        for product in products:
-            product['_id'] = str(product['_id'])
-        return render_template('account/favorites.html', products=products)
-    except Exception as e:
-        flash(f"Đã xảy ra lỗi khi tải danh sách sản phẩm yêu thích: {str(e)}", "danger")
-        return render_template('account/favorites.html', products=[])
+    if request.method == 'POST':
+        product_id = request.form.get("product_id")
+        result = remove_from_favorites(product_id)
+        # Sau khi xóa, tải lại danh sách sản phẩm yêu thích
+        favorite_products = get_favorite_products()
+        return render_template('account/favourites.html', current_user=get_user_info(), favorite_products=favorite_products, **result)
 
-@app.route('/address')
+    favorite_products = get_favorite_products()
+    return render_template('account/favourites.html', current_user=get_user_info(), favorite_products=favorite_products)
+
+@app.route('/address', methods=['GET', 'POST'])
 @jwt_required()
 def address():
-    try:
-        current_user = get_jwt_identity()
-        user_id = current_user['user_id']
+    if not session.get("user_id"):
+        return redirect(url_for('auth.login'))
 
-        addresses = list(mongo.db.addresses.find({"user_id": ObjectId(user_id)}))
-        for address in addresses:
-            address['_id'] = str(address['_id'])
-            address['user_id'] = str(address['user_id'])
-        return render_template('account/address.html', addresses=addresses)
-    except Exception as e:
-        flash(f"Đã xảy ra lỗi khi tải danh sách địa chỉ: {str(e)}", "danger")
-        return render_template('account/address.html', addresses=[])
+    addresses = get_addresses_exc()
+    return render_template('account/address.html', current_user=get_user_info(), addresses=addresses)
+
+@app.route('/add_address', methods=['POST'])
+def add_address():
+    if not session.get("user_id"):
+        return redirect(url_for('auth.login'))
+
+    result = add_address_exc()
+    addresses = get_addresses_exc()
+    return render_template('account/address.html', current_user=get_user_info(), addresses=addresses, **result)
+
+@app.route('/update_address/<address_id>', methods=['POST'])
+def update_address(address_id):
+    if not session.get("user_id"):
+        return redirect(url_for('auth.login'))
+
+    result = update_address_exc(address_id)
+    addresses = get_addresses_exc()
+    return render_template('account/address.html', current_user=get_user_info(), addresses=addresses, **result)
+
+@app.route('/delete_address/<address_id>', methods=['POST'])
+def delete_address(address_id):
+    if not session.get("user_id"):
+        return redirect(url_for('auth.login'))
+
+    result = delete_address_exc(address_id)
+    addresses = get_addresses_exc()
+    return render_template('account/address.html', current_user=get_user_info(), addresses=addresses, **result)
 
 @app.route('/change-password')
 @jwt_required()
 def change_password():
-    return render_template('account/change-password.html')
+    if not session.get("user_id"):
+        return redirect(url_for('auth.login'))
+
+    if request.method == 'POST':
+        result = change_password_exc()
+        return render_template('account/change-password.html', current_user=get_user_info(), **result)
+
+    return render_template('account/change-password.html', current_user=get_user_info())
     
 @app.route('/payments')
 def payments():
