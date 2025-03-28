@@ -1,12 +1,13 @@
 import json
 from bson import ObjectId
 from flask import render_template, request, make_response, flash, redirect, url_for, session
-from flask_jwt_extended import get_jwt_identity, jwt_required
+from flask_jwt_extended import  get_jwt_identity, jwt_required
 from services.account import change_password_exc
 from services.account.account_exc import get_user_info, update_user_info
 from services.account.address_exc import add_address_exc, delete_address_exc, get_addresses_exc, update_address_exc
-from services.account.favourites_exc import get_favorite_products, remove_from_favorites
+from services.account.favourites_exc import get_favorite_products_exc, remove_from_favorites_exc
 from services.account.orders_exc import get_orders
+from services.admin.product_exc import add_brand_exc, add_category_exc, add_product_exc, delete_brand_exc, delete_category_exc, delete_product_exc, get_all_brands_exc, get_all_categories_exc, get_all_products_exc, update_brand_exc, update_category_exc, update_product_exc
 from services.cart import add_to_cart, remove_cart, update_cart
 from services.cart.cart import cart_exc
 from services.cart.cart_count import cart_count_exc
@@ -14,9 +15,10 @@ from services.middleware import role_required
 from app import app, mongo
 from services.auth.register_exc import register_exc
 from services.auth.login_exc import login_exc
-from flask_login import login_required, logout_user
+from flask_login import logout_user
 from services.product.product_detail_exc import product_detail_exc
 from services.product.search_exc import search_exc
+from services.cart.checkout import checkout_exc, payments_exc, invoice_detail_exc
 
 # User Routes
 @app.route('/')
@@ -105,49 +107,72 @@ def favourites():
 
     if request.method == 'POST':
         product_id = request.form.get("product_id")
-        result = remove_from_favorites(product_id)
+        result = remove_from_favorites_exc(product_id)
         # Sau khi xóa, tải lại danh sách sản phẩm yêu thích
-        favorite_products = get_favorite_products()
+        favorite_products = get_favorite_products_exc()
         return render_template('account/favourites.html', current_user=get_user_info(), favorite_products=favorite_products, **result)
 
-    favorite_products = get_favorite_products()
+    favorite_products = get_favorite_products_exc()
     return render_template('account/favourites.html', current_user=get_user_info(), favorite_products=favorite_products)
 
 @app.route('/address', methods=['GET', 'POST'])
 @jwt_required()
 def address():
     if not session.get("user_id"):
-        return redirect(url_for('auth.login'))
+        return redirect(url_for('login'))
 
     addresses = get_addresses_exc()
-    return render_template('account/address.html', current_user=get_user_info(), addresses=addresses)
+    success_message = session.pop('success_message', None)
+    error_message = session.pop('error_message', None)
+    
+    # Đảm bảo success_message và error_message là chuỗi rỗng nếu None
+    success_message = success_message if success_message else ''
+    error_message = error_message if error_message else ''
+    
+    return render_template('account/address.html',
+                         current_user=get_user_info(),
+                         addresses=addresses,
+                         success_message=success_message,
+                         error_message=error_message)
 
 @app.route('/add_address', methods=['POST'])
+@jwt_required()
 def add_address():
     if not session.get("user_id"):
-        return redirect(url_for('auth.login'))
+        return redirect(url_for('login'))
 
     result = add_address_exc()
-    addresses = get_addresses_exc()
-    return render_template('account/address.html', current_user=get_user_info(), addresses=addresses, **result)
+    if "success" in result:
+        session['success_message'] = result["success"]
+    elif "error" in result:
+        session['error_message'] = result["error"]
+    return redirect(url_for('address'))
 
 @app.route('/update_address/<address_id>', methods=['POST'])
+@jwt_required()
 def update_address(address_id):
     if not session.get("user_id"):
-        return redirect(url_for('auth.login'))
+        return redirect(url_for('login'))
 
     result = update_address_exc(address_id)
-    addresses = get_addresses_exc()
-    return render_template('account/address.html', current_user=get_user_info(), addresses=addresses, **result)
+    if "success" in result:
+        session['success_message'] = result["success"]
+    elif "error" in result:
+        session['error_message'] = result["error"]
+    return redirect(url_for('address'))
 
 @app.route('/delete_address/<address_id>', methods=['POST'])
+@jwt_required()
 def delete_address(address_id):
     if not session.get("user_id"):
-        return redirect(url_for('auth.login'))
+        return redirect(url_for('login'))
 
     result = delete_address_exc(address_id)
-    addresses = get_addresses_exc()
-    return render_template('account/address.html', current_user=get_user_info(), addresses=addresses, **result)
+    if "success" in result:
+        session['success_message'] = result["success"]
+    elif "error" in result:
+        session['error_message'] = result["error"]
+    return redirect(url_for('address'))
 
 @app.route('/change-password')
 @jwt_required()
@@ -162,9 +187,43 @@ def change_password():
     return render_template('account/change-password.html', current_user=get_user_info())
     
 @app.route('/payments')
-def payments():
-    return render_template('cart/payments.html')
+@jwt_required()
+def payments_route():
+    return payments_exc()
 
+@app.route('/cart/order-complete')
+@jwt_required()
+def order_complete():
+    # Lấy user_id từ JWT
+    user_id = get_jwt_identity()
+    if not user_id:
+        return redirect(url_for('login'))
+
+    # Lấy thông tin đơn hàng từ session (nếu có)
+    order = session.get('pending_order')
+    if not order:
+        # Nếu không có trong session, thử lấy đơn hàng gần nhất của người dùng từ database
+        order = mongo.db.orders.find_one(
+            {"user_id": ObjectId(user_id)},
+            sort=[("order_date", -1)]  # Sắp xếp theo ngày đặt hàng, lấy đơn hàng mới nhất
+        )
+        if not order:
+            flash("Không tìm thấy đơn hàng.", "danger")
+            return redirect(url_for('orders'))
+
+    # Chuyển đổi ObjectId thành string nếu lấy từ database
+    if '_id' in order:
+        order['_id'] = str(order['_id'])
+        order['user_id'] = str(order['user_id'])
+
+    return render_template('cart/order-complete.html', order=order)
+
+@app.route('/invoice/<order_id>')
+@jwt_required()
+def invoice_detail(order_id):
+    return invoice_detail_exc(order_id)
+
+#Error Routes
 @app.route('/404')
 def error_404():
     return render_template('error/404.html')
@@ -216,9 +275,10 @@ def search():
                           brands=brands, 
                           price_ranges=price_ranges)
 
-@app.route('/checkout')
+@app.route('/checkout', methods=['GET', 'POST'])
+@jwt_required()
 def checkout():
-    return render_template('cart/checkout.html')
+    return checkout_exc()
 
 @app.route('/policy')
 def policy():
@@ -241,7 +301,108 @@ def admin_orders():
 @jwt_required()
 @role_required('admin')
 def products():
-    return render_template('admin/products.html')
+    products = get_all_products_exc()
+    categories = get_all_categories_exc()
+    brands = get_all_brands_exc()
+    return render_template('admin/products.html', products=products, categories=categories, brands=brands)
+
+@app.route('/admin/add_product', methods=['POST'])
+@role_required("admin")
+def admin_add_product():
+    data = request.form
+    file = request.files.get('image')
+    result = add_product_exc(data, file)
+    if "success" in result:
+        flash(result["success"], "success")
+    else:
+        flash(result.get("error", "Có lỗi xảy ra!"), "danger")
+    return redirect(url_for('admin_products'))
+
+@app.route('/admin/update_product/<product_id>', methods=['POST'])
+@role_required("admin")
+def admin_update_product(product_id):
+    data = request.form
+    file = request.files.get('image')
+    result = update_product_exc(product_id, data, file)
+    if "success" in result:
+        flash(result["success"], "success")
+    else:
+        flash(result.get("error", "Có lỗi xảy ra!"), "danger")
+    return redirect(url_for('admin_products'))
+
+@app.route('/admin/delete_product/<product_id>', methods=['POST'])
+@role_required("admin")
+def admin_delete_product(product_id):
+    result = delete_product_exc(product_id)
+    if "success" in result:
+        flash(result["success"], "success")
+    else:
+        flash(result.get("error", "Có lỗi xảy ra!"), "danger")
+    return redirect(url_for('admin_products'))
+
+@app.route('/admin/add_category', methods=['POST'])
+@role_required("admin")
+def admin_add_category():
+    data = request.form
+    result = add_category_exc(data)
+    if "success" in result:
+        flash(result["success"], "success")
+    else:
+        flash(result.get("error", "Có lỗi xảy ra!"), "danger")
+    return redirect(url_for('admin_products'))
+
+@app.route('/admin/update_category/<category_id>', methods=['POST'])
+@role_required("admin")
+def admin_update_category(category_id):
+    data = request.form
+    result = update_category_exc(category_id, data)
+    if "success" in result:
+        flash(result["success"], "success")
+    else:
+        flash(result.get("error", "Có lỗi xảy ra!"), "danger")
+    return redirect(url_for('admin_products'))
+
+@app.route('/admin/delete_category/<category_id>', methods=['POST'])
+@role_required("admin")
+def admin_delete_category(category_id):
+    result = delete_category_exc(category_id)
+    if "success" in result:
+        flash(result["success"], "success")
+    else:
+        flash(result.get("error", "Có lỗi xảy ra!"), "danger")
+    return redirect(url_for('admin_products'))
+
+@app.route('/admin/add_brand', methods=['POST'])
+@role_required("admin")
+def admin_add_brand():
+    data = request.form
+    result = add_brand_exc(data)
+    if "success" in result:
+        flash(result["success"], "success")
+    else:
+        flash(result.get("error", "Có lỗi xảy ra!"), "danger")
+    return redirect(url_for('admin_products'))
+
+@app.route('/admin/update_brand/<brand_id>', methods=['POST'])
+@role_required("admin")
+def admin_update_brand(brand_id):
+    data = request.form
+    result = update_brand_exc(brand_id, data)
+    if "success" in result:
+        flash(result["success"], "success")
+    else:
+        flash(result.get("error", "Có lỗi xảy ra!"), "danger")
+    return redirect(url_for('admin_products'))
+
+@app.route('/admin/delete_brand/<brand_id>', methods=['POST'])
+@role_required("admin")
+def admin_delete_brand(brand_id):
+    result = delete_brand_exc(brand_id)
+    if "success" in result:
+        flash(result["success"], "success")
+    else:
+        flash(result.get("error", "Có lỗi xảy ra!"), "danger")
+    return redirect(url_for('admin_products'))
 
 @app.route('/admin/customers')
 @jwt_required()
@@ -270,8 +431,13 @@ def logout():
     
     # Thêm script để xóa token từ localStorage
     response.headers['HX-Trigger'] = json.dumps({
-        'clearToken': True
+        'clearToken': True,
+        'showSuccessAlert': {
+            'title': 'Thành công!',
+            'message': 'Bạn đã đăng xuất thành công'
+        }
     })
+
     # Đăng xuất người dùng hiện tại nếu đang sử dụng Flask-Login
     try:
         logout_user()
@@ -279,9 +445,10 @@ def logout():
         pass
     
     # Xóa session
-    session.clear()
-    
-    flash("Bạn đã đăng xuất thành công", "success")
-    
-    # Thêm script vào response
+    session.clear()    
     return response
+
+
+@app.route('/cart/payment-status')
+def payment_status():
+    return render_template('cart/payment-status.html')
