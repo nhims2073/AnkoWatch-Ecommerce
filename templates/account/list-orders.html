@@ -98,7 +98,7 @@
                                                 <td>{{ order.date }}</td>
                                                 <td>{{ order.total }}đ</td>
                                                 <td>
-                                                    <span class="badge {% if order.status == 'Đã giao' %}bg-success{% elif order.status == 'Đang giao' %}bg-info{% else %}bg-warning{% endif %}">
+                                                    <span class="badge {% if order.status == 'Hoàn thành' %}bg-success{% elif order.status == 'Chờ giao hàng' or order.status == 'Chờ vận chuyển' %}bg-info{% elif order.status == 'Đã hủy' or order.status == 'Hoàn hàng' %}bg-danger{% else %}bg-warning{% endif %}">
                                                         {{ order.status }}
                                                     </span>
                                                 </td>
@@ -226,7 +226,8 @@
                             }
                         });
                     } else {
-                        const noItemsDiv = document.createElement('p');
+                        const noItemsDiv = document.createElement('div');
+                        noItemsDiv.className = 'order-item-card p-3';
                         noItemsDiv.textContent = 'Không có sản phẩm trong đơn hàng.';
                         modalOrderItems.appendChild(noItemsDiv);
                     }
