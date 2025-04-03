@@ -62,7 +62,7 @@
                 <p><strong>Tổng tiền:</strong> {{ "{:,.0f}".format(order.total) }}đ</p>
             </div>
         </div>
-
+<!-- 
         <div class="invoice-items">
             <h4>Sản phẩm trong đơn hàng</h4>
             {% if order.items and order.items is iterable %}
@@ -88,7 +88,7 @@
             {% endif %}
         </div>
 
-        <a href="{{ url_for('orders') }}" class="btn btn-primary">Quay lại danh sách đơn hàng</a>
+        <a href="{{ url_for('orders') }}" class="btn btn-primary">Quay lại danh sách đơn hàng</a> -->
     </div>
 
     {% include 'base/footer.html' %}

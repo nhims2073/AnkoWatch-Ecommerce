@@ -43,29 +43,7 @@
             <p><strong>Địa chỉ giao hàng:</strong> {{ order.receiver_address }}</p>
             <p><strong>Phương thức thanh toán:</strong> {{ order.payment_method }}</p>
             <p><strong>Tổng tiền:</strong> {{ "{:,.0f}".format(order.total) }}đ</p>
-            <p><strong>Trạng thái thanh toán:</strong> {{ order.payment_status }}</p>
-            <p><strong>Trạng thái giao hàng:</strong> {{ order.delivery_status }}</p>
-            <h5 class="mt-4">Sản phẩm trong đơn hàng</h5>
-            {% if order.items and order.items is iterable %}
-                {% for item in order.items %}
-                    {% if item is mapping %}
-                        <div class="card mb-2">
-                            <div class="card-body d-flex align-items-center">
-                                <img src="{{ item.image }}" alt="{{ item.name }}" style="width: 60px; height: 60px; object-fit: cover; margin-right: 15px;">
-                                <div>
-                                    <p class="mb-0"><strong>{{ item.name }}</strong></p>
-                                    <p class="mb-0">Số lượng: {{ item.quantity }}</p>
-                                    <p class="mb-0">Giá: {{ "{:,.0f}".format(item.price) }}đ</p>
-                                </div>
-                            </div>
-                        </div>
-                    {% else %}
-                        <p class="text-danger">Dữ liệu sản phẩm không hợp lệ: {{ item }}</p>
-                    {% endif %}
-                {% endfor %}
-            {% else %}
-                <p>Không có sản phẩm trong đơn hàng.</p>
-            {% endif %}
+            
         </div>
 
         <a href="{{ url_for('invoice_detail', order_id=order.order_id) }}" class="btn btn-primary mt-4">Xem chi tiết đơn hàng</a>
