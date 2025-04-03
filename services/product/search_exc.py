@@ -5,53 +5,75 @@ import re
 
 def search_exc():
     """
-    Hàm xử lý logic tìm kiếm sản phẩm dựa trên từ khóa người dùng nhập.
-    Trả về danh sách sản phẩm phù hợp để hiển thị trên search.html.
+    Hàm xử lý logic tìm kiếm sản phẩm dựa trên các bộ lọc người dùng nhập.
+    Trả về danh sách sản phẩm, category_mapping và thông báo nếu không tìm thấy.
     """
-    # Lấy từ khóa tìm kiếm từ query parameter 'q'
+    # Lấy các tham số từ query string
     query = request.args.get('q', '').strip()
-
-    # Lấy các bộ lọc khác (nếu có): category, sort, brand, price_range
     category = request.args.get('category', '')
     sort = request.args.get('sort', 'relevance')
-    brands = request.args.getlist('brand')  # Danh sách thương hiệu được chọn
-    price_ranges = request.args.getlist('price_range')  # Danh sách khoảng giá được chọn
+    brands = request.args.getlist('brand')
+    price_ranges = request.args.getlist('price_range')
 
-    # Nếu không có từ khóa, trả về danh sách rỗng
-    if not query:
-        return []
+    final_condition = {}
+    message = None
 
-    # Tạo điều kiện tìm kiếm
-    search_conditions = []
+    # Tìm kiếm theo từ khóa
+    if query:
+        search_conditions = []
+        keywords = query.split()
+        for keyword in keywords:
+            regex = re.compile(f'.*{re.escape(keyword)}.*', re.IGNORECASE)
+            search_conditions.append({
+                '$or': [
+                    {'name': regex},
+                    {'material': regex},
+                    {'origin': regex},
+                    {'technology': regex}
+                ]
+            })
+        if search_conditions:
+            final_condition['$and'] = search_conditions
 
-    # Tách từ khóa thành các từ riêng lẻ để tìm kiếm
-    keywords = query.split()
-    for keyword in keywords:
-        # Tạo regex để tìm kiếm không phân biệt hoa thường
-        regex = re.compile(f'.*{re.escape(keyword)}.*', re.IGNORECASE)
-        # Tìm kiếm trên các trường: name, brand, material, origin
-        search_conditions.append({
-            '$or': [
-                {'name': regex},
-                {'brand': regex},
-                {'material': regex},
-                {'origin': regex},
-                {'technology': regex}
-            ]
-        })
-
-    # Kết hợp các điều kiện tìm kiếm (tìm sản phẩm khớp với bất kỳ từ khóa nào)
-    final_condition = {'$and': search_conditions} if search_conditions else {}
-
-    # Thêm bộ lọc category (nếu có)
+    # Bộ lọc danh mục
+    category_mapping = {
+        'dong_ho_nam': 'Đồng hồ nam',
+        'dong_ho_nu': 'Đồng hồ nữ'
+    }
     if category:
-        final_condition['gender'] = category.upper()  # Ví dụ: "NAM" hoặc "NỮ"
+        category_name = category_mapping.get(category)
+        if category_name:
+            category_doc = mongo.db.categories.find_one({'name': category_name}, {'_id': 1})
+            if category_doc:
+                final_condition['category_ids'] = {'$in': [category_doc['_id']]}
+            else:
+                message = f"Không tìm thấy danh mục: {category_name}"
+                return [], category_mapping, message
 
-    # Thêm bộ lọc thương hiệu (nếu có)
+    # Bộ lọc thương hiệu
     if brands:
-        final_condition['brand'] = {'$in': [brand.capitalize() for brand in brands]}
+        brand_mapping = {
+            'audemars_piguet': 'Audemars Piguet',  # Sửa lỗi chính tả 'audemas_piguet'
+            'jacques_lemans': 'Jacques Lemans',
+            'epos_swiss': 'Epos Swiss',
+            'philippe_auguste': 'Philippe Auguste'
+        }
+        brand_ids = []
+        for brand_name in brands:
+            corrected_brand_name = brand_mapping.get(brand_name, brand_name.replace('_', ' ').title())
+            brand = mongo.db.brands.find_one(
+                {'name': {'$regex': f'^{re.escape(corrected_brand_name)}$', '$options': 'i'}},
+                {'_id': 1}
+            )
+            if brand:
+                brand_ids.append(brand['_id'])
+        if brand_ids:
+            final_condition['brand_id'] = {'$in': brand_ids}
+        else:
+            message = f"Không tìm thấy thương hiệu: {', '.join(brands)}"
+            return [], category_mapping, message
 
-    # Thêm bộ lọc khoảng giá (nếu có)
+    # Bộ lọc giá
     if price_ranges:
         price_conditions = []
         for price_range in price_ranges:
@@ -60,27 +82,43 @@ def search_exc():
                 price_conditions.append({
                     'price': {'$gte': min_price, '$lte': max_price}
                 })
-            except:
+            except ValueError:
                 continue
         if price_conditions:
             final_condition['$or'] = price_conditions
 
-    # Truy vấn MongoDB
+    # Truy vấn sản phẩm từ collection products
     products = mongo.db.products.find(final_condition)
 
     # Sắp xếp kết quả
     if sort == 'price_asc':
-        products = products.sort('price', 1)  # Sắp xếp giá tăng dần
+        products = products.sort('price', 1)
     elif sort == 'price_desc':
-        products = products.sort('price', -1)  # Sắp xếp giá giảm dần
+        products = products.sort('price', -1)
     else:
-        # Mặc định: sắp xếp theo độ phù hợp (_id giảm dần)
         products = products.sort('_id', -1)
 
-    # Chuyển đổi dữ liệu để render template
+    # Chuẩn hóa dữ liệu sản phẩm
     product_list = []
     for product in products:
         product['_id'] = str(product['_id'])  # Chuyển ObjectId thành string
+        product['name'] = product.get('name', 'Không xác định')
+        product['image'] = product.get('image', '/static/images/default-product.jpg')
+        if 'brand_id' in product and product['brand_id']:
+            brand = mongo.db.brands.find_one({'_id': ObjectId(product['brand_id'])}, {'name': 1})
+            product['brand'] = brand['name'] if brand else 'Không xác định'
+        else:
+            product['brand'] = 'Không xác định'
+        product['price'] = float(product.get('price', 0))
         product_list.append(product)
 
-    return product_list
+    # Thông báo nếu không tìm thấy sản phẩm
+    if not product_list and not message:
+        if brands:
+            message = f"Không tìm thấy sản phẩm nào thuộc thương hiệu: {', '.join(brands)}"
+        elif category:
+            message = f"Không tìm thấy sản phẩm nào thuộc danh mục: {category_name}"
+        else:
+            message = "Không tìm thấy sản phẩm nào."
+
+    return product_list, category_mapping, message
