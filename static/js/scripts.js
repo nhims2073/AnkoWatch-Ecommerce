@@ -256,10 +256,6 @@ function updateCartBadge() {
     });
 }
 
-// Chạy khi trang tải
-document.addEventListener('DOMContentLoaded', function() {
-    updateCartBadge();
-});
 
 // Lắng nghe sự kiện HX-Trigger từ backend
 document.addEventListener('updateCartBadge', function() {
@@ -321,4 +317,96 @@ function removeFromFavorite(productId) {
             });
         });
     }
+}
+
+function showAlert(type, title, message) {
+    Swal.fire({
+        icon: type,
+        title: title,
+        text: message,
+        confirmButtonText: 'OK',
+        timer: 3000,
+        showConfirmButton: '#28a745'
+    });
+}
+
+function confirmDelete() {
+    document.querySelectorAll('.btn-outline-danger').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const form = this.closest('form');
+            
+            Swal.fire({
+                title: "Bạn có chắc chắn?",
+                text: "Bạn sẽ không thể hoàn tác hành động này!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Xoá",
+                cancelButtonText: "Hủy"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+        });
+    });
+}
+
+// Kiểm tra và hiển thị thông báo khi trang được tải
+document.addEventListener('DOMContentLoaded', function() {
+    updateCartBadge();
+    confirmDelete();
+
+    console.log('successMessage:', successMessage);
+    console.log('errorMessage:', errorMessage);
+
+    if (successMessage && typeof successMessage === 'string' && successMessage.trim() !== '') {
+        Swal.fire({
+            icon: 'success',
+            title: 'Thành công!',
+            text: successMessage,
+            timer: 1500,
+            showConfirmButton: false
+        });
+    }
+
+    if (errorMessage && typeof errorMessage === 'string' && errorMessage.trim() !== '') {
+        Swal.fire({
+            icon: 'error',
+            title: 'Lỗi!',
+            text: errorMessage,
+            timer: 1500,
+            showConfirmButton: false
+        });
+    }
+});
+
+function addToFavourites(product_id) {
+    fetch(`/add_to_favourites/${product_id}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        Swal.fire({
+            icon: 'success',
+            title: 'Đã thêm vào danh sách yêu thích!',
+            text: data.success,
+            timer: 1500,
+            showConfirmButton: false
+        });
+    })
+    .catch(err => {
+        console.error(err);
+        Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: 'Có lỗi xảy ra, thử lại sau nha!',
+        });
+    });
 }
