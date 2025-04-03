@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vouchers · Anko Watch</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+<header class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
+    <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3" href="/"><span class="fs-2 text-uppercase">Anko Watch</span></a>
+    <button class="navbar-toggler position-absolute d-md-none collapsed mt-1 me-1" type="button" data-bs-toggle="offcanvas"
+    data-bs-target="#offcanvasSidebar" aria-controls="offcanvasSidebar" aria-expanded="false" aria-label="Toggle navigation"
+    style="top: 0; right: 0;">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <input class="form-control form-control-dark w-100 d-none d-md-block" type="text" placeholder="Search" aria-label="Search">
+    <div class="navbar-nav">
+        <div class="nav-item text-nowrap">
+            <a class="nav-link px-3 d-none d-md-block" href="{{ url_for('home') }}">Sign out</a>
+        </div>
+    </div>
+</header>
+
+<div class="container-fluid">
+    <div class="row">
+        <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
+            <div class="position-sticky pt-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/dashboard">
+                            <i class="bi bi-house-door"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/orders">
+                            <i class="bi bi-file-earmark"></i> Orders
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/products">
+                            <i class="bi bi-cart"></i> Products
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/customers">
+                            <i class="bi bi-people"></i> Customers
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/reports">
+                            <i class="bi bi-bar-chart"></i> Reports
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/admin/vouchers">
+                            <i class="bi bi-ticket-perforated"></i> Vouchers
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasSidebar" aria-labelledby="offcanvasSidebarLabel">
+            <div class="offcanvas-header">
+                <h5 class="offcanvas-title" id="offcanvasSidebarLabel">Menu</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            </div>
+            <div class="offcanvas-body">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/dashboard">
+                            <i class="bi bi-house-door"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/orders">
+                            <i class="bi bi-file-earmark"></i> Orders
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/products">
+                            <i class="bi bi-cart"></i> Products
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/customers">
+                            <i class="bi bi-people"></i> Customers
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/reports">
+                            <i class="bi bi-bar-chart"></i> Reports
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/admin/vouchers">
+                            <i class="bi bi-ticket-perforated"></i> Vouchers
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/integrations">
+                            <i class="bi bi-layers"></i> Integrations
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">Vouchers</h1>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createVoucherModal">Tạo Voucher</button>
+            </div>
+
+            <div class="container mt-3">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <input type="text" class="form-control" id="searchVoucher" placeholder="Tìm kiếm mã voucher..." oninput="searchVouchers()">
+                    </div>
+                </div>
+
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Mã Voucher</th>
+                            <th>Số lượng còn lại</th>
+                            <th>Thời gian tạo</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody id="voucherTableBody">
+                        {% for voucher in vouchers %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ voucher.code }}</td>
+                            <td>{{ voucher.quantity }}</td>
+                            <td>{{ voucher.created_at }}</td>
+                            <td>
+                                <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#editVoucherModal" data-voucher-id="{{ voucher._id }}">Sửa</button>
+                                <button class="btn btn-danger btn-sm" onclick="deleteVoucher('{{ voucher._id }}')">Xóa</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Modal Tạo Voucher -->
+            <div class="modal fade" id="createVoucherModal" tabindex="-1" aria-labelledby="createVoucherModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="createVoucherModalLabel">Tạo Voucher</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="createVoucherForm">
+                                <div class="mb-3">
+                                    <label for="voucherCode" class="form-label">Mã Voucher</label>
+                                    <input type="text" class="form-control" id="voucherCode" name="code" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="voucherDiscount" class="form-label">Discount (%)</label>
+                                    <input type="number" class="form-control" id="voucherDiscount" name="discount" min="0" max="100" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="voucherQuantity" class="form-label">Số lượng</label>
+                                    <input type="number" class="form-control" id="voucherQuantity" name="quantity" min="1" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="voucherExpiry" class="form-label">Thời gian hết hạn</label>
+                                    <input type="date" class="form-control" id="voucherExpiry" name="expiry_date" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Tạo</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Sửa Voucher -->
+            <div class="modal fade" id="editVoucherModal" tabindex="-1" aria-labelledby="editVoucherModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="editVoucherModalLabel">Sửa Voucher</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="editVoucherForm">
+                                <input type="hidden" id="editVoucherId" name="voucher_id">
+                                <div class="mb-3">
+                                    <label for="editVoucherCode" class="form-label">Mã Voucher</label>
+                                    <input type="text" class="form-control" id="editVoucherCode" name="code" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="editVoucherDiscount" class="form-label">Discount (%)</label>
+                                    <input type="number" class="form-control" id="editVoucherDiscount" name="discount" min="0" max="100" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="editVoucherQuantity" class="form-label">Số lượng</label>
+                                    <input type="number" class="form-control" id="editVoucherQuantity" name="quantity" min="1" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="editVoucherExpiry" class="form-label">Thời gian hết hạn</label>
+                                    <input type="date" class="form-control" id="editVoucherExpiry" name="expiry_date" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Lưu</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+<script>
+document.getElementById('createVoucherForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    fetch('/admin/add_voucher', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            Swal.fire({
+                title: 'Thành công!',
+                text: data.success,
+                icon: 'success'
+            }).then(() => location.reload());
+        } else {
+            Swal.fire('Lỗi!', data.error || 'Có lỗi xảy ra!', 'error');
+        }
+    })
+    .catch(error => Swal.fire('Lỗi!', 'Không thể tạo voucher!', 'error'));
+});
+
+document.querySelectorAll('[data-bs-target="#editVoucherModal"]').forEach(button => {
+    button.addEventListener('click', function() {
+        const voucherId = this.getAttribute('data-voucher-id');
+        fetch(`/admin/voucher/${voucherId}`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('editVoucherId').value = data._id;
+                document.getElementById('editVoucherCode').value = data.code;
+                document.getElementById('editVoucherDiscount').value = data.discount;
+                document.getElementById('editVoucherQuantity').value = data.quantity;
+                document.getElementById('editVoucherExpiry').value = data.expiry_date.split('T')[0];
+            });
+    });
+});
+
+document.getElementById('editVoucherForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    fetch('/admin/update_voucher', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            Swal.fire({
+                title: 'Thành công!',
+                text: data.success,
+                icon: 'success'
+            }).then(() => location.reload());
+        } else {
+            Swal.fire('Lỗi!', data.error || 'Có lỗi xảy ra!', 'error');
+        }
+    })
+    .catch(error => Swal.fire('Lỗi!', 'Không thể sửa voucher!', 'error'));
+});
+
+function deleteVoucher(voucherId) {
+    Swal.fire({
+        title: 'Bạn có chắc?',
+        text: "Bạn sẽ không thể khôi phục voucher này!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Xóa',
+        cancelButtonText: 'Hủy'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`/admin/delete_voucher/${voucherId}`, { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire('Thành công!', data.success, 'success').then(() => location.reload());
+                    } else {
+                        Swal.fire('Lỗi!', data.error || 'Có lỗi xảy ra!', 'error');
+                    }
+                })
+                .catch(error => Swal.fire('Lỗi!', 'Không thể xóa voucher!', 'error'));
+        }
+    });
+}
+
+function searchVouchers() {
+    const query = document.getElementById('searchVoucher').value;
+    fetch(`/admin/vouchers?search=${encodeURIComponent(query)}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        const tbody = document.getElementById('voucherTableBody');
+        tbody.innerHTML = '';
+        if (data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center">Không tìm thấy voucher nào.</td></tr>';
+        } else {
+            data.forEach((voucher, index) => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${voucher.code}</td>
+                        <td>${voucher.quantity}</td>
+                        <td>${voucher.created_at}</td>
+                        <td>
+                            <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#editVoucherModal" data-voucher-id="${voucher._id}">Sửa</button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteVoucher('${voucher._id}')">Xóa</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error searching vouchers:', error);
+        Swal.fire('Lỗi!', 'Không thể tìm kiếm voucher!', 'error');
+    });
+}
+</script>
+</body>
+</html>
