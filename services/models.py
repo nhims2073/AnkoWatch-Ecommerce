@@ -1,6 +1,7 @@
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 from app import mongo
+from bson import ObjectId
 
 class BaseModel:
     def __init__(self, collection):
@@ -15,22 +16,29 @@ class BaseModel:
 class UserModel(UserMixin):
     collection = mongo.db.users
 
-    def __init__(self, username, password, fullname, email, role="member"):
+    def __init__(self, username, password, fullname, email, role_name="member"):
         if not all([username, password, fullname, email]):
             raise ValueError("All fields are required")
         self.username = username.strip()
-        self.password = generate_password_hash(password)  # Hash mật khẩu ngay khi khởi tạo
+        self.password = generate_password_hash(password)
         self.fullname = fullname.strip()
         self.email = email.strip()
-        self.role = role
+
+        # Truy vấn role_id từ role_name
+        role = mongo.db.roles.find_one({"name": role_name})
+        if not role:
+            raise ValueError(f"Role '{role_name}' not found in roles collection")
+        self.role_id = role["_id"]
+        self.role_name = role_name  # Lưu role_name để sử dụng nếu cần
 
     def save(self):
         self.collection.insert_one({
             "username": self.username,
-            "password": self.password,  # Đã được hash
+            "password": self.password,
             "fullname": self.fullname,
             "email": self.email,
-            "role": self.role
+            "role_id": self.role_id,  # Lưu role_id thay vì role
+            "image": "https://via.placeholder.com/150"  # Thêm trường image mặc định
         })
 
     @classmethod
@@ -41,6 +49,13 @@ class UserModel(UserMixin):
     def validate_password(stored_hashed_password, provided_password):
         return check_password_hash(stored_hashed_password, provided_password)
     
+    def get_role_name(self):
+        """Lấy role_name từ role_id"""
+        if hasattr(self, "role_id"):
+            role = mongo.db.roles.find_one({"_id": self.role_id})
+            return role["name"] if role else "user"
+        return "user"
+
 class Product:
     def __init__(self, name, price, quantity, description, image_url):
         self.name = name

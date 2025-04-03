@@ -1,22 +1,36 @@
 from flask import redirect, url_for, flash
-from flask_jwt_extended import verify_jwt_in_request, get_jwt_identity
-import json
+from flask_jwt_extended import get_jwt, verify_jwt_in_request, get_jwt_identity
 from functools import wraps
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def role_required(role):
     def wrapper(fn):
         @wraps(fn)
         def decorator(*args, **kwargs):
             try:
+                # Xác minh JWT token từ cookies
                 verify_jwt_in_request(locations=["cookies"])
-                current_user = json.loads(get_jwt_identity())
-
-                if current_user["role"] != role:
-                    flash("Unauthorized access", "danger")
+                
+                # Lấy toàn bộ claims từ token JWT
+                jwt_data = get_jwt()
+                
+                # Lấy role từ claims
+                user_role = jwt_data.get("role")
+                if not user_role:
+                    flash("Không tìm thấy vai trò của người dùng!", "danger")
                     return redirect(url_for("login"))
 
-            except Exception:
-                flash("Session expired or unauthorized access", "danger")
+                # Kiểm tra role
+                if user_role.lower() != role.lower():
+                    flash("Không được phép truy cập! Vai trò không phù hợp.", "danger")
+                    return redirect(url_for("login"))
+
+            except Exception as e:
+                logger.error(f"Error in role_required: {str(e)}")
+                flash("Phiên đăng nhập đã hết hạn hoặc không được phép truy cập!", "danger")
                 return redirect(url_for("login"))
 
             return fn(*args, **kwargs)
