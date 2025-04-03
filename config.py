@@ -13,7 +13,7 @@ class Config:
     JWT_COOKIE_SECURE = False
     JWT_COOKIE_CSRF_PROTECT = False
     JWT_SESSION_COOKIE = True
-    JWT_ACCESS_TOKEN_EXPIRES = timedelta(minutes=30)
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=2)
 
     CLOUDINARY_CLOUD_NAME = os.getenv("CLOUDINARY_CLOUD_NAME")
     CLOUDINARY_API_KEY = os.getenv("CLOUDINARY_API_KEY")
