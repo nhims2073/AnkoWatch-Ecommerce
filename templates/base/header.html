@@ -7,8 +7,8 @@
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
-            <form class="search-form w-100">
-                <input class="form-control me-1 mt-3 object-fit-cover" type="search" placeholder="Search" aria-label="Search">
+            <form class="search-form w-100" action="{{ url_for('search') }}" method="GET">
+                <input class="form-control me-1 mt-3 object-fit-cover" type="search" name="q" placeholder="Search" aria-label="Search" value="{{ request.args.get('q', '') }}">
             </form>
             <div class="navbar-right d-flex">
                 <div class="cart mt-2 mx-3 d-flex align-items-center">
@@ -31,8 +31,9 @@
                         {% endif %}
                         <li><a class="dropdown-item" href="{{ url_for('account') }}">Tài khoản</a></li>
                         <li><a class="dropdown-item" href="{{ url_for('orders') }}">Thông tin đơn hàng</a></li>
-                        <li><a class="dropdown-item" href="{{ url_for('account') }}#yeu-thich">Sản phẩm yêu thích</a></li>
-                        <li><a class="dropdown-item" href="{{ url_for('account') }}#doi-mat-khau">Đổi mật khẩu</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('favourites') }}">Sản phẩm yêu thích</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('address') }}">Địa chỉ giao hàng</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('change_password') }}">Đổi mật khẩu</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="{{ url_for('logout') }}">Đăng xuất</a></li>
                     </ul>
@@ -84,7 +85,7 @@ style="display: none; position: fixed; bottom: 20px; right: 30px; z-index: 99; f
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
     <div class="offcanvas-body">
-        <form class="search-form d-flex">
+        <form class="search-form d-flex" action="{{ url_for('search') }}" method="GET">
             <input class="form-control me-2 mt-3" type="search" placeholder="Search" aria-label="Search">
             <button class="btn btn-warning me-1 mt-3"><i class="bi bi-search"></i></button>
         </form>
@@ -104,4 +105,5 @@ style="display: none; position: fixed; bottom: 20px; right: 30px; z-index: 99; f
 </div>
 
 <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
