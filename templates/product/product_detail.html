@@ -13,13 +13,18 @@
 
     {% block content %}
 
+    <hr>
 
     <!-- Breadcrumb -->
     <nav aria-label="breadcrumb" style="padding-left: 5%;">
         <ol class="breadcrumb fs-5">
             <li class="breadcrumb-item text-decoration-none"><a href="/">Trang chủ</a></li>
-            <li class="breadcrumb-item"><a href="#">Đồng hồ</a></li>
-            <li class="breadcrumb-item"><a href="#">{{ 'Đồng hồ nam' if product.gender == 'nam' else 'Đồng hồ nữ' }}</a></li>
+            <li class="breadcrumb-item">
+                <a href="{{ url_for('search', category=category_name|lower|replace(' ', '_')) }}">{{ category_name }}</a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="{{ url_for('search', brand=product.brand_name|lower|replace(' ', '_')) }}">{{ product.brand_name }}</a>
+            </li>
             <li class="breadcrumb-item active" style="color: #38383D" aria-current="page">{{ product.name }}</li>
         </ol>
     </nav>
@@ -42,15 +47,24 @@
                         <i class="bi bi-star-fill"></i>
                     </span>
                 </div>
-                <h3 class="text-primary">{{ "{:,.0f}".format(product.price) }}đ</h3>
+                <h3 class="text-primary">{{ product.price | default(0) | format_number }}đ</h3>
                 <div class="dropdown my-3">
                     <span style="font-size: 17px; margin-right: 5px;">Size:</span>
-                    <span style="font-size: 17px; font-weight: 500;">{{ product.size }}</span>
+                    {% if product.size and product.size|length > 0 %}
+                        <select name="size" class="form-select d-inline-block" style="width: auto;">
+                            {% for size in product.size %}
+                                <option value="{{ size }}">{{ size }}</option>
+                            {% endfor %}
+                        </select>
+                    {% else %}
+                        <span style="font-size: 17px; font-weight: 500;">Không xác định</span>
+                    {% endif %}
+                    mm
                 </div>
-                <p><strong>Chất liệu:</strong> {{ product.material }}</p>
-                <p><strong>Xuất xứ:</strong> {{ product.origin }}</p>
-                <p><strong>Công nghệ:</strong> {{ product.technology }}</p>
-                <p><strong>Năm sản xuất:</strong> {{ product.year }}</p>
+                <p><strong>Chất liệu:</strong> {{ product.material | default('Không xác định') }}</p>
+                <p><strong>Xuất xứ:</strong> {{ product.origin | default('Không xác định') }}</p>
+                <p><strong>Công nghệ:</strong> {{ product.technology | default('Không xác định') }}</p>
+                <p><strong>Năm sản xuất:</strong> {{ product.year | default('Không xác định') }}</p>
 
                 <div class="input-group mb-4" style="max-width: 200px;">
                     <button class="btn btn-outline-primary" onclick="decreaseQuantity(this)">
@@ -76,12 +90,14 @@
 
     <!-- Description -->
     <div class="container mt-5">
-        <h4>Mô tả sản phẩm</h4>
-        {% if product.description %}
-            <p>{{ product.description }}</p>
-        {% else %}
-            <p>Chưa có mô tả cho sản phẩm này.</p>
-        {% endif %}
+        <h4 class="mb-3">Mô tả sản phẩm</h4>
+        <div class="card p-4">
+            {% if product.description and product.description != "No description available" %}
+                <p>{{ product.description | safe }}</p>
+            {% else %}
+                <p class="text-muted">Chưa có mô tả cho sản phẩm này.</p>
+            {% endif %}
+        </div>
     </div>
 
     <!-- Related Products -->
@@ -94,7 +110,7 @@
                     <img src="{{ related_product.image }}" class="card-img-top my-3" alt="{{ related_product.name }}">
                     <div class="card-body">
                         <h5 class="card-title">{{ related_product.name }}</h5>
-                        <p class="card-text">{{ "{:,.0f}".format(related_product.price) }}đ</p>
+                        <p class="card-text">{{ related_product.price | default(0) | format_number }}đ</p>
                         <a href="{{ url_for('product_detail', product_id=related_product._id) }}" class="btn btn-primary">Xem chi tiết</a>
                     </div>
                 </div>
@@ -104,12 +120,11 @@
     </div>
     {% endblock %}
 
-
     {% include 'base/footer.html' %}
 
 <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js" integrity="sha384-oBqDVmMz4fnFO9gybBogGzFJHSK6eI5p/Zd2LL+P1ylkN2xB5G5m5da5e5f5e5f5" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 
-</body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'928c8a4c9d187bd5',t:'MTc0MzM4OTQzNi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
