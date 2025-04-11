@@ -3,11 +3,11 @@ from datetime import timedelta
 
 class Config:
     SECRET_KEY = os.getenv("SECRET_KEY")
-    MONGO_URI = "mongodb+srv://test:12341234@cluster0.i3vkq.mongodb.net/e-commerce?retryWrites=true&w=majority&appName=Cluster0"
+    MONGO_URI = os.getenv("mongodb+srv://test:12341234@cluster0.i3vkq.mongodb.net/e-commerce?retryWrites=true&w=majority&appName=Cluster0")
     JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
     CACHE_TYPE = "RedisCache"
-    CACHE_REDIS_HOST = "localhost"
-    CACHE_REDIS_PORT = 6379
+    CACHE_REDIS_HOST = os.getenv("CACHE_REDIS_HOST", "localhost")
+    CACHE_REDIS_PORT = int(os.getenv("CACHE_REDIS_PORT", 6379))
     JWT_TOKEN_LOCATION = ["cookies"]
     JWT_ACCESS_COOKIE_NAME = "access_token_cookie"
     JWT_COOKIE_SECURE = False
@@ -19,15 +19,6 @@ class Config:
     CLOUDINARY_API_KEY = os.getenv("CLOUDINARY_API_KEY")
     CLOUDINARY_API_SECRET = os.getenv("CLOUDINARY_API_SECRET")
 
-    # # PAYOS Config
-    # PAYOS_CLIENT_ID = os.getenv("PAYOS_CLIENT_ID")
-    # PAYOS_API_KEY = os.getenv("PAYOS_API_KEY")
-    # PAYOS_CHECKSUM_KEY = os.getenv("PAYOS_CHECKSUM_KEY")
-    # PAYOS_API_URL = "https://api-merchant.payos.vn/v2/payment-requests"
-    # PAYOS_RETURN_URL = os.getenv("PAYOS_RETURN_URL") 
-    # PAYOS_CANCEL_URL = os.getenv("PAYOS_CANCEL_URL")
-
-    #VNPAY Config
     VNPAY_TMN_CODE = os.getenv("VNPAY_TMN_CODE")
     VNPAY_HASH_SECRET = os.getenv("VNPAY_HASH_SECRET")
     VNPAY_URL = os.getenv("VNPAY_URL")
