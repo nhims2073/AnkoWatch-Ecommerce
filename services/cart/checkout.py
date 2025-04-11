@@ -60,6 +60,10 @@ def checkout_exc():
         if not user_id:
             flash("Vui lòng đăng nhập để tiếp tục thanh toán.", "danger")
             return redirect(url_for('login'))
+        print("VNPAY_URL:", current_app.config["VNPAY_URL"])
+        print("VNPAY_TMN_CODE:", current_app.config["VNPAY_TMN_CODE"])
+        print("VNPAY_HASH_SECRET:", current_app.config["VNPAY_HASH_SECRET"])
+        print("VNPAY_RETURN_URL:", current_app.config["VNPAY_RETURN_URL"])
 
         claims = get_jwt()
         discount_amount = claims.get('discount_amount', 0)
