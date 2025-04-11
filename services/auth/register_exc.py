@@ -1,4 +1,5 @@
-from flask import logging, render_template, request, redirect, url_for, flash
+import logging
+from flask import render_template, request, redirect, url_for, flash
 from werkzeug.security import generate_password_hash
 from app import mongo
 from bson import ObjectId

@@ -1,5 +1,5 @@
-import json
-from flask import jsonify, logging, request, make_response, redirect, url_for, session, render_template
+import logging
+from flask import jsonify, request, make_response, redirect, url_for, session, render_template
 from werkzeug.security import check_password_hash
 from app import mongo, login_manager, User
 from flask_login import login_user

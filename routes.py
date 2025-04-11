@@ -13,7 +13,7 @@ from services.admin.vouchers_exc import add_voucher_exc, delete_voucher_exc, get
 from services.cart import add_to_cart, remove_cart, update_cart
 from services.cart.cart import cart_exc
 from services.cart.cart_count import cart_count_exc
-from services.cart.payment_exc import payment_return, process_payment
+from services.cart.payment_exc import payment_return
 from services.middleware import role_required
 from app import app, mongo
 from services.auth.register_exc import register_exc
@@ -26,7 +26,6 @@ from services.cart.checkout import apply_voucher_exc, checkout_exc, invoice_deta
 from services.admin.customer_exc import get_all_customers_exc, update_customer_role_exc, get_all_roles_exc, add_role_exc
 from services.admin.dashboard_exc import get_dashboard_stats
 from services.admin.orders_exc import get_all_orders, get_orders_by_status, get_order_details
-
 
 # User Routes
 @app.route('/')
