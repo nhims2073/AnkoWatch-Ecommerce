@@ -20,6 +20,6 @@ class Config:
     CLOUDINARY_API_SECRET = os.getenv("CLOUDINARY_API_SECRET")
 
     VNPAY_TMN_CODE = os.getenv("VNPAY_TMN_CODE")
-    VNPAY_HASH_SECRET = ("VNPAY_HASH_SECRET")
-    VNPAY_URL = ("VNPAY_URL")
-    VNPAY_RETURN_URL = ("VNPAY_RETURN_URL")
+    VNPAY_HASH_SECRET = os.environ.get("VNPAY_HASH_SECRET")
+    VNPAY_URL = os.environ.get("VNPAY_URL")
+    VNPAY_RETURN_URL = os.environ.get("VNPAY_RETURN_URL")
