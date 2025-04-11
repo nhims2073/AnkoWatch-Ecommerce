@@ -1,7 +1,6 @@
-from flask import redirect, url_for, flash
+from flask import logging, redirect, url_for, flash
 from flask_jwt_extended import get_jwt, verify_jwt_in_request, get_jwt_identity
 from functools import wraps
-import logging
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

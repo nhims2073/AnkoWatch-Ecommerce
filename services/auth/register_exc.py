@@ -1,8 +1,7 @@
-from flask import render_template, request, redirect, url_for, flash
+from flask import logging, render_template, request, redirect, url_for, flash
 from werkzeug.security import generate_password_hash
 from app import mongo
 from bson import ObjectId
-import logging
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

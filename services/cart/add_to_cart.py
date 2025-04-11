@@ -1,8 +1,7 @@
 from bson import ObjectId
-from flask import jsonify, flash, session
+from flask import jsonify, flash, logging, session
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app import mongo
-import logging
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
