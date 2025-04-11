@@ -9,6 +9,7 @@ import requests
 import json
 import hmac
 import hashlib
+from urllib.parse import urlencode
 
 def generate_order_id():
     """Tạo mã đơn hàng với định dạng DH + 15 ký tự số ngẫu nhiên."""
@@ -192,70 +193,50 @@ def checkout_exc():
                 mongo.db.carts.delete_one({"user_id": ObjectId(user_id)})
                 return render_template('cart/order-complete.html', order=order)
 
-            elif payment_method == "payos":
+            elif payment_method == "vnpay":
                 try:
-                    # Chuẩn bị dữ liệu gửi đến PayOS
-                    amount = int(float(order["total"]))
+                    # Chuẩn bị dữ liệu gửi đến VNPay
+                    amount = int(float(order["total"]) * 100)  # VNPay yêu cầu số tiền tính bằng VND, nhân 100
                     order_code = order["order_id"]
+                    ip_addr = request.remote_addr  # Lấy địa chỉ IP của client
 
-                    payment_data = {
-                        "orderCode": order_code,
-                        "amount": amount,
-                        "description": f"Thanh toán đơn hàng {order_code}",
-                        "returnUrl": current_app.config["PAYOS_RETURN_URL"],
-                        "cancelUrl": current_app.config["PAYOS_CANCEL_URL"],
-                        "buyerName": order["receiver_name"],
-                        "buyerEmail": order["receiver_email"],
-                        "buyerPhone": order["receiver_phone"],
-                        "items": order["items"]
+                    vnpay_params = {
+                        "vnp_Version": "2.1.0",
+                        "vnp_Command": "pay",
+                        "vnp_TmnCode": current_app.config["VNPAY_TMN_CODE"],
+                        "vnp_Amount": amount,
+                        "vnp_CurrCode": "VND",
+                        "vnp_TxnRef": order_code,
+                        "vnp_OrderInfo": f"Thanh toan don hang {order_code}",
+                        "vnp_OrderType": "250000",  # Loại hàng hóa (tùy chọn, ví dụ: 250000 - Thời trang)
+                        "vnp_Locale": "vn",
+                        "vnp_ReturnUrl": current_app.config["VNPAY_RETURN_URL"],
+                        "vnp_IpAddr": ip_addr,
+                        "vnp_CreateDate": datetime.now().strftime("%Y%m%d%H%M%S"),
                     }
 
-                    # Tạo chữ ký (signature) cho PayOS
-                    checksum_key = current_app.config["PAYOS_CHECKSUM_KEY"].encode("utf-8")
-                    data_str = json.dumps(payment_data, sort_keys=True)
+                    # Sắp xếp các tham số theo thứ tự khóa và tạo chữ ký
+                    sorted_params = sorted(vnpay_params.items())
+                    sign_data = "&".join(f"{k}={v}" for k, v in sorted_params)
+                    vnp_hash_secret = current_app.config["VNPAY_HASH_SECRET"].encode("utf-8")
                     signature = hmac.new(
-                        checksum_key,
-                        data_str.encode("utf-8"),
-                        hashlib.sha256
+                        vnp_hash_secret,
+                        sign_data.encode("utf-8"),
+                        hashlib.sha512
                     ).hexdigest()
+                    vnpay_params["vnp_SecureHash"] = signature
 
-                    # Gửi yêu cầu đến PayOS API
-                    headers = {
-                        "x-client-id": current_app.config["PAYOS_CLIENT_ID"],
-                        "x-api-key": current_app.config["PAYOS_API_KEY"],
-                        "Content-Type": "application/json"
-                    }
-                    print("Sending request to PayOS with data:", payment_data)  # Debug
-                    response = requests.post(
-                        current_app.config["PAYOS_API_URL"],
-                        headers=headers,
-                        json={**payment_data, "signature": signature}
-                    )
+                    # Tạo URL thanh toán
+                    vnpay_url = current_app.config["VNPAY_URL"] + "?" + urlencode(vnpay_params)
+                    print("VNPay URL:", vnpay_url)
 
-                    # Kiểm tra phản hồi từ PayOS
-                    print("PayOS Response Status Code:", response.status_code)
-                    print("PayOS Response Text:", response.text)
-
-                    if response.status_code == 200:
-                        result = response.json()
-                        if result.get("code") == "00":
-                            payment_url = result["data"]["checkoutUrl"]
-                            # Lưu đơn hàng vào session
-                            session["pending_order"] = order
-                            return redirect(payment_url)
-                        else:
-                            error_message = result.get('desc', 'Không rõ nguyên nhân')
-                            print(f"PayOS API Error: {error_message}")
-                            flash(f"Lỗi từ PayOS: {error_message}", "danger")
-                    else:
-                        error_message = f"PayOS HTTP Error: Status {response.status_code}, Response: {response.text}"
-                        print(error_message)
-                        flash(error_message, "danger")
-                    return redirect(url_for('checkout'))
+                    # Lưu đơn hàng vào session trước khi redirect
+                    session["pending_order"] = order
+                    return redirect(vnpay_url)
 
                 except Exception as e:
-                    print(f"Error in PayOS payment processing: {str(e)}")
-                    flash(f"Lỗi khi xử lý thanh toán PayOS: {str(e)}", "danger")
+                    print(f"Error in VNPay payment processing: {str(e)}")
+                    flash(f"Lỗi khi xử lý thanh toán VNPay: {str(e)}", "danger")
                     return redirect(url_for('checkout'))
 
         return render_template('cart/checkout.html', cart_items=cart_items, subtotal=subtotal, total=total, addresses=addresses, default_address=default_address)
@@ -266,32 +247,51 @@ def checkout_exc():
         return render_template('cart/checkout.html', cart_items=[], subtotal=0, total=0, addresses=[], default_address=None)
 
 def payment_return():
-    """Xử lý phản hồi từ PayOS sau khi thanh toán."""
+    """Xử lý phản hồi từ VNPay sau khi thanh toán."""
     try:
         user_id = get_jwt_identity()
         if not user_id:
             flash("Vui lòng đăng nhập để tiếp tục.", "danger")
             return redirect(url_for("login"))
 
-        # Lấy dữ liệu phản hồi từ PayOS
-        order_code = request.args.get("orderCode")
-        status = request.args.get("status")
+        # Lấy dữ liệu phản hồi từ VNPay
+        vnpay_response = request.args.to_dict()
+        print("VNPay Response:", vnpay_response)
 
-        print("PayOS Response:", request.args.to_dict())
+        vnp_transaction_no = vnpay_response.get("vnp_TransactionNo")
+        vnp_response_code = vnpay_response.get("vnp_ResponseCode")
+        vnp_txn_ref = vnpay_response.get("vnp_TxnRef")
+        vnp_secure_hash = vnpay_response.get("vnp_SecureHash")
 
-        if not order_code:
-            flash("Không tìm thấy mã đơn hàng.", "danger")
+        if not vnp_txn_ref or not vnp_secure_hash:
+            flash("Không tìm thấy thông tin thanh toán từ VNPay.", "danger")
             session.pop("pending_order", None)
             return redirect(url_for("orders"))
 
         # Lấy đơn hàng từ session
         order_data = session.get("pending_order")
-        if not order_data or order_data.get("order_id") != order_code:
+        if not order_data or order_data.get("order_id") != vnp_txn_ref:
             flash("Thông tin đơn hàng không hợp lệ.", "danger")
             session.pop("pending_order", None)
             return redirect(url_for("orders"))
 
-        if status == "PAID":
+        # Kiểm tra chữ ký từ VNPay
+        vnp_hash_secret = current_app.config["VNPAY_HASH_SECRET"].encode("utf-8")
+        input_data = {k: v for k, v in vnpay_response.items() if k != "vnp_SecureHash"}
+        sorted_params = sorted(input_data.items())
+        sign_data = "&".join(f"{k}={v}" for k, v in sorted_params)
+        signature = hmac.new(
+            vnp_hash_secret,
+            sign_data.encode("utf-8"),
+            hashlib.sha512
+        ).hexdigest()
+
+        if signature != vnp_secure_hash:
+            flash("Chữ ký không hợp lệ từ VNPay.", "danger")
+            session.pop("pending_order", None)
+            return redirect(url_for("checkout"))
+
+        if vnp_response_code == "00":
             # Thanh toán thành công, lưu đơn hàng vào CSDL
             order_for_db = order_data.copy()
             order_for_db["user_id"] = ObjectId(user_id)
@@ -304,10 +304,10 @@ def payment_return():
 
             # Thêm thông tin thanh toán
             order_for_db["payment_details"] = {
-                "method": "payos",
+                "method": "vnpay",
                 "status": "paid",
-                "orderCode": order_code,
-                "amount": order_for_db["total"],
+                "transaction_no": vnp_transaction_no,
+                "amount": float(vnpay_response.get("vnp_Amount")) / 100,  # Chia 100 để về VND
                 "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             }
 
@@ -323,15 +323,9 @@ def payment_return():
             flash("Thanh toán thành công!", "success")
             return redirect(url_for("order_complete"))
 
-        elif status == "CANCELLED":
-            # Thanh toán bị hủy, không lưu đơn hàng
-            flash("Thanh toán đã bị hủy.", "warning")
-            session.pop("pending_order", None)
-            return redirect(url_for("checkout"))
-
         else:
-            # Trạng thái không xác định
-            flash(f"Trạng thái thanh toán không xác định: {status}", "danger")
+            # Thanh toán thất bại
+            flash(f"Thanh toán thất bại. Mã lỗi: {vnp_response_code}", "danger")
             session.pop("pending_order", None)
             return redirect(url_for("checkout"))
 
