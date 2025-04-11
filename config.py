@@ -5,9 +5,9 @@ class Config:
     SECRET_KEY = os.getenv("SECRET_KEY")
     MONGO_URI = os.getenv("MONGO_URI")
     JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
-    CACHE_TYPE = "RedisCache"
-    CACHE_REDIS_HOST = os.getenv("CACHE_REDIS_HOST", "localhost")
-    CACHE_REDIS_PORT = int(os.getenv("CACHE_REDIS_PORT", 6379))
+    CACHE_TYPE = "SimpleCache"
+    # CACHE_REDIS_HOST = os.getenv("CACHE_REDIS_HOST", "localhost")
+    # CACHE_REDIS_PORT = int(os.getenv("CACHE_REDIS_PORT", 6379))
     JWT_TOKEN_LOCATION = ["cookies"]
     JWT_ACCESS_COOKIE_NAME = "access_token_cookie"
     JWT_COOKIE_SECURE = False
