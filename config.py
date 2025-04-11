@@ -18,3 +18,11 @@ class Config:
     CLOUDINARY_CLOUD_NAME = os.getenv("CLOUDINARY_CLOUD_NAME")
     CLOUDINARY_API_KEY = os.getenv("CLOUDINARY_API_KEY")
     CLOUDINARY_API_SECRET = os.getenv("CLOUDINARY_API_SECRET")
+
+    # PAYOS Config
+    PAYOS_CLIENT_ID = os.getenv("PAYOS_CLIENT_ID")
+    PAYOS_API_KEY = os.getenv("PAYOS_API_KEY")
+    PAYOS_CHECKSUM_KEY = os.getenv("PAYOS_CHECKSUM_KEY")
+    PAYOS_API_URL = "https://api-merchant.payos.vn/v2/payment-requests"
+    PAYOS_RETURN_URL = os.getenv("PAYOS_RETURN_URL") 
+    PAYOS_CANCEL_URL = os.getenv("PAYOS_CANCEL_URL")

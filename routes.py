@@ -13,6 +13,7 @@ from services.admin.vouchers_exc import add_voucher_exc, delete_voucher_exc, get
 from services.cart import add_to_cart, remove_cart, update_cart
 from services.cart.cart import cart_exc
 from services.cart.cart_count import cart_count_exc
+from services.cart.payment_exc import payment_return, process_payment
 from services.middleware import role_required
 from app import app, mongo
 from services.auth.register_exc import register_exc
@@ -21,7 +22,7 @@ from flask_login import logout_user
 from services.policy.news_exc import get_all_news, get_news_detail
 from services.product.product_detail_exc import product_detail_exc
 from services.product.search_exc import search_exc
-from services.cart.checkout import apply_voucher_exc, checkout_exc, payments_exc, invoice_detail_exc
+from services.cart.checkout import apply_voucher_exc, checkout_exc, invoice_detail_exc
 from services.admin.customer_exc import get_all_customers_exc, update_customer_role_exc, get_all_roles_exc, add_role_exc
 from services.admin.dashboard_exc import get_dashboard_stats
 from services.admin.orders_exc import get_all_orders, get_orders_by_status, get_order_details
@@ -147,9 +148,7 @@ def favourites():
         return render_template('account/favourites.html', current_user=get_user_info(), favorite_products=favorite_products)
 
     favorite_products = get_favorite_products_exc()
-    return render_template('account/favourites.html', current_user=get_user_info(), favorite_products=favorite_products)
-
-    
+    return render_template('account/favourites.html', current_user=get_user_info(), favorite_products=favorite_products)   
 
 @app.route('/add_to_favourites/<product_id>', methods=['POST'])
 @jwt_required()
@@ -228,10 +227,16 @@ def change_password():
 
     return render_template('account/change-password.html', current_user=get_user_info())
     
-@app.route('/payments')
+# @app.route('/payments', methods=['GET', 'POST'])
+# @jwt_required()
+# def payments_route():
+#     from services.cart.payment_exc import process_payment
+#     return process_payment()
+
+@app.route('/payment_return', methods=['GET'])
 @jwt_required()
-def payments_route():
-    return payments_exc()
+def payment_return_route():
+    return payment_return()
 
 @app.route('/cart/order-complete')
 @jwt_required()
@@ -284,7 +289,6 @@ def news_detail(news_id):
     article = get_news_detail(news_id)
     return render_template('news-detail.html', article=article)
     
-
 @app.route('/cart')
 @jwt_required()
 def cart():
@@ -834,3 +838,4 @@ def logout():
     # Xóa session
     session.clear()    
     return response
+
