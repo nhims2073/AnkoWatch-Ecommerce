@@ -62,5 +62,7 @@ def load_user(user_id):
 
 from routes import *
 
+application = app
+
 if __name__ == "__main__":
     app.run(debug=True)
