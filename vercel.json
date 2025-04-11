@@ -11,5 +11,10 @@
         "src": "/(.*)",
         "dest": "app.py"
       }
-    ]
+    ],
+    "frameworks": [
+        {
+            "python": "3.12"
+        }
+      ]
   }
