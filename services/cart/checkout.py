@@ -221,8 +221,8 @@ def checkout_exc():
                         "vnp_Amount": amount,
                         "vnp_CurrCode": "VND",
                         "vnp_TxnRef": order_code,
-                        "vnp_OrderInfo": f"Thanh toan don hang {order_code}",
-                        "vnp_OrderType": "250000",  # Loại hàng hóa (tùy chọn, ví dụ: 250000 - Thời trang)
+                        "vnp_OrderInfo": f"Thanh toan don hang {order_code}",  # Giá trị gốc
+                        "vnp_OrderType": "250000",
                         "vnp_Locale": "vn",
                         "vnp_ReturnUrl": current_app.config["VNPAY_RETURN_URL"],
                         "vnp_IpAddr": ip_addr,
@@ -232,12 +232,14 @@ def checkout_exc():
                     # Sắp xếp các tham số theo thứ tự khóa và tạo chữ ký
                     sorted_params = sorted(vnpay_params.items())
                     sign_data = "&".join(f"{k}={v}" for k, v in sorted_params)
+                    print("Sign data before hashing:", sign_data)  # Debug
                     vnp_hash_secret = current_app.config["VNPAY_HASH_SECRET"].encode("utf-8")
                     signature = hmac.new(
                         vnp_hash_secret,
                         sign_data.encode("utf-8"),
                         hashlib.sha512
                     ).hexdigest()
+                    print("Generated signature:", signature)  # Debug
                     vnpay_params["vnp_SecureHash"] = signature
 
                     # Tạo URL thanh toán
