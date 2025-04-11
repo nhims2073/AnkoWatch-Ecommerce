@@ -195,6 +195,16 @@ def checkout_exc():
 
             elif payment_method == "vnpay":
                 try:
+                    # Kiểm tra các giá trị cấu hình VNPay
+                    if not current_app.config["VNPAY_URL"]:
+                        raise ValueError("VNPAY_URL không được thiết lập trong cấu hình.")
+                    if not current_app.config["VNPAY_TMN_CODE"]:
+                        raise ValueError("VNPAY_TMN_CODE không được thiết lập trong cấu hình.")
+                    if not current_app.config["VNPAY_HASH_SECRET"]:
+                        raise ValueError("VNPAY_HASH_SECRET không được thiết lập trong cấu hình.")
+                    if not current_app.config["VNPAY_RETURN_URL"]:
+                        raise ValueError("VNPAY_RETURN_URL không được thiết lập trong cấu hình.")
+
                     # Chuẩn bị dữ liệu gửi đến VNPay
                     amount = int(float(order["total"]) * 100)  # VNPay yêu cầu số tiền tính bằng VND, nhân 100
                     order_code = order["order_id"]
