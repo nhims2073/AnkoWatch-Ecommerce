@@ -1,10 +1,10 @@
-import logging
 from flask import jsonify, request, make_response, redirect, url_for, session, render_template
 from werkzeug.security import check_password_hash
 from app import mongo, login_manager, User
 from flask_login import login_user
 from flask_jwt_extended import create_access_token, set_access_cookies
 from bson import ObjectId
+import logging
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
