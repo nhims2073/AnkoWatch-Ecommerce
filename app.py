@@ -1,3 +1,4 @@
+import os
 from bson import ObjectId
 from flask import Flask
 from flask_pymongo import PyMongo
@@ -5,6 +6,10 @@ from flask_jwt_extended import JWTManager
 from flask_caching import Cache
 from config import Config
 from flask_login import LoginManager, UserMixin, current_user
+
+if os.environ.get("FLASK_ENV", "production") != "production":
+    from dotenv import load_dotenv
+    load_dotenv()
 
 app = Flask(__name__)
 app.config.from_object(Config)
