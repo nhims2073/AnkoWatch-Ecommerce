@@ -19,7 +19,7 @@ class Config:
     CLOUDINARY_API_KEY = os.getenv("CLOUDINARY_API_KEY")
     CLOUDINARY_API_SECRET = os.getenv("CLOUDINARY_API_SECRET")
 
-    VNPAY_TMN_CODE = os.getenv("VNPAY_TMN_CODE")
-    VNPAY_HASH_SECRET = os.getenv("VNPAY_HASH_SECRET")
-    VNPAY_URL = os.getenv("VNPAY_URL")
-    VNPAY_RETURN_URL = os.getenv("VNPAY_RETURN_URL")
+    VNPAY_TMN_CODE = os.getenv("VNPAY_TMN_CODE", "6Y7D76AG")
+    VNPAY_HASH_SECRET = os.getenv("VNPAY_HASH_SECRET", "IDF5TVB3V28HK2HYX0JIRF7TUL9XX4TZ")
+    VNPAY_URL = os.getenv("VNPAY_URL", "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html")
+    VNPAY_RETURN_URL = os.getenv("VNPAY_RETURN_URL", "https://anko-watch-ecommerce-git-master-enzo3ks-projects.vercel.app/payment_return")
