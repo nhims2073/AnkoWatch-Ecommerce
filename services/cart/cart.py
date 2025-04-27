@@ -30,7 +30,6 @@ def cart_exc():
             products_list = list(products)
 
             cart_items = []
-            subtotal = 0
             total_quantity = sum(item['quantity'] for item in cart['products'])
             for product in products_list:
                 product['_id'] = str(product['_id'])
@@ -38,14 +37,18 @@ def cart_exc():
                     if str(item['product_id']) == product['_id']:
                         product['quantity'] = item['quantity']
                         price = float(product['price']) if isinstance(product['price'], (str, int)) else product['price']
-                        subtotal += price * item['quantity']
                         break
                 cart_items.append(product)
+
+            subtotal = sum(
+                item.get('discounted_price', item['price']) * item['quantity']
+                for item in cart_items
+            )
 
         today = datetime.now().strftime('%d.%m.%Y')
         delivery_date = (datetime.now() + timedelta(days=2)).strftime('%d.%m.%Y')
         discount = float(discount_amount)
-        total = subtotal - discount
+        total = subtotal - discount_amount  # discount_amount là giá trị giảm giá
 
         return render_template('cart/cart.html', cart_items=cart_items, today=today, delivery_date=delivery_date, subtotal=subtotal, total=total, total_quantity=total_quantity)
 

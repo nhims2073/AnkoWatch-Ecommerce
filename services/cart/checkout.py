@@ -9,7 +9,7 @@ import requests
 import json
 import hmac
 import hashlib
-from urllib.parse import urlencode
+from urllib.parse import urlencode, quote_plus
 
 def generate_order_id():
     """Tạo mã đơn hàng với định dạng DH + 15 ký tự số ngẫu nhiên."""
@@ -60,16 +60,12 @@ def checkout_exc():
         if not user_id:
             flash("Vui lòng đăng nhập để tiếp tục thanh toán.", "danger")
             return redirect(url_for('login'))
-        print("VNPAY_URL:", current_app.config["VNPAY_URL"])
-        print("VNPAY_TMN_CODE:", current_app.config["VNPAY_TMN_CODE"])
-        print("VNPAY_HASH_SECRET:", current_app.config["VNPAY_HASH_SECRET"])
-        print("VNPAY_RETURN_URL:", current_app.config["VNPAY_RETURN_URL"])
 
         claims = get_jwt()
         discount_amount = claims.get('discount_amount', 0)
 
         cart = mongo.db.carts.find_one({"user_id": ObjectId(user_id)})
-        if not cart or 'products' not in cart:
+        if not cart or 'products' not in cart or not cart['products']:
             flash("Giỏ hàng của bạn đang trống.", "warning")
             return render_template('cart/checkout.html', cart_items=[], subtotal=0, total=0, addresses=[], default_address=None)
 
@@ -91,16 +87,17 @@ def checkout_exc():
             for item in cart['products']:
                 if str(item['product_id']) == product['_id']:
                     product['quantity'] = item['quantity']
-                    price = float(product['price']) if isinstance(product['price'], (str, int)) else product['price']
+                    # Ưu tiên sử dụng discounted_price nếu tồn tại, nếu không thì dùng price
+                    price = float(product.get('discounted_price', product.get('price', 0)))
+                    product['discounted_price'] = price  # Đảm bảo cart_items chứa discounted_price
                     subtotal += price * item['quantity']
                     cart_items.append(product)
                     break
 
         if not cart_items:
             flash("Không có sản phẩm hợp lệ trong giỏ hàng.", "warning")
-            return redirect(url_for('cart'))
+            return render_template('cart/checkout.html', cart_items=[], subtotal=0, total=0, addresses=[], default_address=None)
 
-        # Áp dụng voucher nếu có
         voucher_code = request.args.get('voucher_code') or session.get('voucher_code')
         voucher_discount = 0
         if voucher_code:
@@ -109,11 +106,20 @@ def checkout_exc():
                 voucher_discount = discount_amount
                 session['voucher_code'] = voucher_code
                 session['voucher_discount'] = voucher_discount
+                flash(message, "success")
             else:
                 session.pop('voucher_code', None)
                 session.pop('voucher_discount', None)
+                flash(message, "danger")
 
-        total = subtotal - (float(discount_amount) + voucher_discount)
+        # Tính total trước khi cộng VAT
+        total = subtotal - (float(discount_amount) if discount_amount else 0) - voucher_discount
+        if total < 0:
+            total = 0  # Đảm bảo tổng không âm
+
+        # Tính VAT và cập nhật total
+        vat = subtotal * 0.1  # VAT 10%
+        total = total + vat  # Cộng VAT vào total
 
         addresses = list(mongo.db.list_address.find({"user_id": ObjectId(user_id)}))
         for address in addresses:
@@ -129,14 +135,14 @@ def checkout_exc():
 
             if not receiver_name or not email or not payment_method:
                 flash("Vui lòng điền đầy đủ thông tin.", "danger")
-                return redirect(url_for('checkout'))
+                return render_template('cart/checkout.html', cart_items=cart_items, subtotal=subtotal, total=total, addresses=addresses, default_address=default_address, voucher_code=voucher_code)
 
             selected_address_id = request.form.get('selected_address')
             if selected_address_id:
                 selected_address = next((addr for addr in addresses if addr['_id'] == selected_address_id), None)
                 if not selected_address:
                     flash("Địa chỉ không hợp lệ.", "danger")
-                    return redirect(url_for('checkout'))
+                    return render_template('cart/checkout.html', cart_items=cart_items, subtotal=subtotal, total=total, addresses=addresses, default_address=default_address, voucher_code=voucher_code)
                 address = selected_address['street']
                 phone = selected_address['phone']
             else:
@@ -147,11 +153,11 @@ def checkout_exc():
 
                 if not address or not phone or not address_type:
                     flash("Vui lòng điền đầy đủ thông tin địa chỉ.", "danger")
-                    return redirect(url_for('checkout'))
+                    return render_template('cart/checkout.html', cart_items=cart_items, subtotal=subtotal, total=total, addresses=addresses, default_address=default_address, voucher_code=voucher_code)
 
                 if address_type not in ["Nhà riêng", "Văn phòng"]:
                     flash("Loại địa chỉ không hợp lệ.", "danger")
-                    return redirect(url_for('checkout'))
+                    return render_template('cart/checkout.html', cart_items=cart_items, subtotal=subtotal, total=total, addresses=addresses, default_address=default_address, voucher_code=voucher_code)
 
                 new_address = {
                     "user_id": ObjectId(user_id),
@@ -167,18 +173,17 @@ def checkout_exc():
                     )
                 mongo.db.list_address.insert_one(new_address)
 
-            # Tạo đơn hàng
             order = {
                 "order_id": generate_order_id(),
-                "user_id": str(user_id),  # Lưu user_id dưới dạng string
+                "user_id": str(user_id),
                 "receiver_name": receiver_name,
                 "receiver_phone": phone,
                 "receiver_email": email,
                 "receiver_address": address,
                 "payment_method": payment_method,
                 "items": [{
-                    "name": item.get('name'),
-                    "price": float(item.get('price', 0)),
+                    "name": item.get('name', 'Không xác định'),
+                    "price": float(item.get('discounted_price', item.get('price', 0))),  # Sử dụng discounted_price
                     "quantity": int(item.get('quantity', 1)),
                     "image": item.get('image', '')
                 } for item in cart_items],
@@ -191,15 +196,13 @@ def checkout_exc():
             }
 
             if payment_method == "COD":
-                # Xử lý thanh toán COD
-                order['user_id'] = ObjectId(user_id)  # Chuyển về ObjectId cho MongoDB
+                order['user_id'] = ObjectId(user_id)
                 mongo.db.orders.insert_one(order)
                 mongo.db.carts.delete_one({"user_id": ObjectId(user_id)})
                 return render_template('cart/order-complete.html', order=order)
 
             elif payment_method == "vnpay":
                 try:
-                    # Kiểm tra các giá trị cấu hình VNPay
                     if not current_app.config["VNPAY_URL"]:
                         raise ValueError("VNPAY_URL không được thiết lập trong cấu hình.")
                     if not current_app.config["VNPAY_TMN_CODE"]:
@@ -209,108 +212,129 @@ def checkout_exc():
                     if not current_app.config["VNPAY_RETURN_URL"]:
                         raise ValueError("VNPAY_RETURN_URL không được thiết lập trong cấu hình.")
 
-                    # Chuẩn bị dữ liệu gửi đến VNPay
-                    amount = int(float(order["total"]) * 100)  # VNPay yêu cầu số tiền tính bằng VND, nhân 100
+                    amount = int(float(order["total"]) * 100)
                     order_code = order["order_id"]
-                    ip_addr = request.remote_addr  # Lấy địa chỉ IP của client
+                    ip_addr = request.remote_addr
 
                     vnpay_params = {
-                        "vnp_Version": "2.1.0",
-                        "vnp_Command": "pay",
-                        "vnp_TmnCode": current_app.config["VNPAY_TMN_CODE"],
                         "vnp_Amount": amount,
-                        "vnp_CurrCode": "VND",
-                        "vnp_TxnRef": order_code,
-                        "vnp_OrderInfo": f"Thanh toan don hang {order_code}",  # Giá trị gốc
-                        "vnp_OrderType": "250000",
-                        "vnp_Locale": "vn",
-                        "vnp_ReturnUrl": current_app.config["VNPAY_RETURN_URL"],
-                        "vnp_IpAddr": ip_addr,
+                        "vnp_Command": "pay",
                         "vnp_CreateDate": datetime.now().strftime("%Y%m%d%H%M%S"),
+                        "vnp_CurrCode": "VND",
+                        "vnp_IpAddr": ip_addr,
+                        "vnp_Locale": "vn",
+                        "vnp_OrderInfo": f"Thanh toan don hang {order_code}",
+                        "vnp_OrderType": "250000",
+                        "vnp_ReturnUrl": current_app.config["VNPAY_RETURN_URL"],
+                        "vnp_TmnCode": current_app.config["VNPAY_TMN_CODE"],
+                        "vnp_TxnRef": order_code,
+                        "vnp_Version": "2.1.0"
                     }
 
-                    # Sắp xếp các tham số theo thứ tự khóa và tạo chữ ký
                     sorted_params = sorted(vnpay_params.items())
-                    sign_data = "&".join(f"{k}={v}" for k, v in sorted_params)
-                    print("Sign data before hashing:", sign_data)  # Debug
+                    sign_data = "&".join(f"{k}={quote_plus(str(v))}" for k, v in sorted_params)
                     vnp_hash_secret = current_app.config["VNPAY_HASH_SECRET"].encode("utf-8")
                     signature = hmac.new(
                         vnp_hash_secret,
                         sign_data.encode("utf-8"),
                         hashlib.sha512
                     ).hexdigest()
-                    print("Generated signature:", signature)  # Debug
                     vnpay_params["vnp_SecureHash"] = signature
 
-                    # Tạo URL thanh toán
-                    vnpay_url = current_app.config["VNPAY_URL"] + "?" + urlencode(vnpay_params)
-                    print("VNPay URL:", vnpay_url)
+                    query_string = "&".join(f"{k}={quote_plus(str(v))}" for k, v in sorted_params)
+                    vnpay_url = current_app.config["VNPAY_URL"] + "?" + query_string + "&vnp_SecureHash=" + signature
 
-                    # Lưu đơn hàng vào session trước khi redirect
                     session["pending_order"] = order
                     return redirect(vnpay_url)
 
                 except Exception as e:
-                    print(f"Error in VNPay payment processing: {str(e)}")
                     flash(f"Lỗi khi xử lý thanh toán VNPay: {str(e)}", "danger")
-                    return redirect(url_for('checkout'))
+                    return render_template('cart/checkout.html', cart_items=cart_items, subtotal=subtotal, total=total, addresses=addresses, default_address=default_address, voucher_code=voucher_code)
 
-        return render_template('cart/checkout.html', cart_items=cart_items, subtotal=subtotal, total=total, addresses=addresses, default_address=default_address)
+        return render_template('cart/checkout.html', cart_items=cart_items, subtotal=subtotal, total=total, addresses=addresses, default_address=default_address, voucher_code=voucher_code)
 
     except Exception as e:
-        print(f"Error in checkout_exc: {str(e)}")
         flash(f"Đã xảy ra lỗi: {str(e)}", "danger")
         return render_template('cart/checkout.html', cart_items=[], subtotal=0, total=0, addresses=[], default_address=None)
 
 def payment_return():
-    """Xử lý phản hồi từ VNPay sau khi thanh toán."""
+    """Xử lý phản hồi từ VNPay sau khi thanh toán, không yêu cầu đăng nhập."""
+    print(f"START payment_return: args={request.args.to_dict()}")
+    print(f"Session data: {session}")
     try:
-        user_id = get_jwt_identity()
-        if not user_id:
-            flash("Vui lòng đăng nhập để tiếp tục.", "danger")
-            return redirect(url_for("login"))
-
-        # Lấy dữ liệu phản hồi từ VNPay
+        print("Fetching VNPay response")
         vnpay_response = request.args.to_dict()
-        print("VNPay Response:", vnpay_response)
+        print(f"VNPay Response: {vnpay_response}")
 
         vnp_transaction_no = vnpay_response.get("vnp_TransactionNo")
         vnp_response_code = vnpay_response.get("vnp_ResponseCode")
         vnp_txn_ref = vnpay_response.get("vnp_TxnRef")
         vnp_secure_hash = vnpay_response.get("vnp_SecureHash")
+        print(f"txn_ref: {vnp_txn_ref}, secure_hash: {vnp_secure_hash}")
 
         if not vnp_txn_ref or not vnp_secure_hash:
-            flash("Không tìm thấy thông tin thanh toán từ VNPay.", "danger")
+            print("Missing vnp_TxnRef or vnp_SecureHash")
+            session['vnp_error_code'] = "N/A"
+            session['vnp_error_message'] = "Không tìm thấy thông tin thanh toán từ VNPay."
             session.pop("pending_order", None)
-            return redirect(url_for("orders"))
+            session['vnp_response_code'] = ""
+            return
 
-        # Lấy đơn hàng từ session
+        print("Fetching pending order from session")
         order_data = session.get("pending_order")
+        print(f"Pending order: {order_data}")
         if not order_data or order_data.get("order_id") != vnp_txn_ref:
-            flash("Thông tin đơn hàng không hợp lệ.", "danger")
+            print("Invalid pending_order or mismatched vnp_TxnRef")
+            session['vnp_error_code'] = "N/A"
+            session['vnp_error_message'] = "Thông tin đơn hàng không hợp lệ."
             session.pop("pending_order", None)
-            return redirect(url_for("orders"))
+            session['vnp_response_code'] = ""
+            return
 
-        # Kiểm tra chữ ký từ VNPay
+        print("Verifying VNPay signature")
         vnp_hash_secret = current_app.config["VNPAY_HASH_SECRET"].encode("utf-8")
         input_data = {k: v for k, v in vnpay_response.items() if k != "vnp_SecureHash"}
         sorted_params = sorted(input_data.items())
-        sign_data = "&".join(f"{k}={v}" for k, v in sorted_params)
+        sign_data = "&".join(f"{k}={quote_plus(str(v))}" for k, v in sorted_params)
+        print(f"Sign data for verification: {sign_data}")
         signature = hmac.new(
             vnp_hash_secret,
             sign_data.encode("utf-8"),
             hashlib.sha512
         ).hexdigest()
+        print(f"Generated signature: {signature}, Received signature: {vnp_secure_hash}")
 
         if signature != vnp_secure_hash:
-            flash("Chữ ký không hợp lệ từ VNPay.", "danger")
+            print("Invalid signature")
+            session['vnp_error_code'] = "N/A"
+            session['vnp_error_message'] = "Chữ ký không hợp lệ từ VNPay."
             session.pop("pending_order", None)
-            return redirect(url_for("checkout"))
+            session['vnp_response_code'] = ""
+            return
+
+        print(f"Processing response code: {vnp_response_code}")
+        # Định nghĩa các mã lỗi của VNPay
+        vnpay_error_codes = {
+            "00": "Giao dịch thành công",
+            "07": "Trừ tiền thành công. Giao dịch bị nghi ngờ (liên quan tới lừa đảo, giao dịch bất thường).",
+            "09": "Giao dịch không thành công do: Thẻ/Tài khoản của khách hàng chưa đăng ký dịch vụ InternetBanking tại ngân hàng.",
+            "10": "Giao dịch không thành công do: Khách hàng xác thực thông tin thẻ/tài khoản không đúng quá 3 lần",
+            "11": "Giao dịch không thành công do: Đã hết hạn chờ thanh toán. Xin vui lòng thực hiện lại giao dịch.",
+            "12": "Giao dịch không thành công do: Thẻ/Tài khoản của khách hàng bị khóa.",
+            "13": "Giao dịch không thành công do Quý khách nhập sai mật khẩu xác thực giao dịch (OTP). Xin vui lòng thực hiện lại giao dịch.",
+            "24": "Giao dịch không thành công do: Khách hàng hủy giao dịch",
+            "51": "Giao dịch không thành công do: Tài khoản của quý khách không đủ số dư để thực hiện giao dịch.",
+            "65": "Giao dịch không thành công do: Tài khoản của Quý khách đã vượt quá hạn mức giao dịch trong ngày.",
+            "75": "Ngân hàng thanh toán đang bảo trì.",
+            "79": "Giao dịch không thành công do: KH nhập sai mật khẩu thanh toán quá số lần quy định. Xin vui lòng thực hiện lại giao dịch",
+            "99": "Lỗi không xác định."
+        }
 
         if vnp_response_code == "00":
-            # Thanh toán thành công, lưu đơn hàng vào CSDL
+            print("Payment successful, preparing order for database")
             order_for_db = order_data.copy()
-            order_for_db["user_id"] = ObjectId(user_id)
+            if "user_id" in order_for_db:
+                order_for_db["user_id"] = ObjectId(order_for_db["user_id"])
             order_for_db["subtotal"] = float(order_for_db["subtotal"])
             order_for_db["total"] = float(order_for_db["total"])
             order_for_db["discount"] = float(order_for_db["discount"])
@@ -318,58 +342,58 @@ def payment_return():
                 item["quantity"] = int(item["quantity"])
                 item["price"] = float(item["price"])
 
-            # Thêm thông tin thanh toán
             order_for_db["payment_details"] = {
                 "method": "vnpay",
                 "status": "paid",
                 "transaction_no": vnp_transaction_no,
-                "amount": float(vnpay_response.get("vnp_Amount")) / 100,  # Chia 100 để về VND
+                "amount": float(vnpay_response.get("vnp_Amount")) / 100,
                 "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             }
 
-            # Lưu vào database
+            print(f"Saving order to database: {order_for_db}")
             mongo.db.orders.insert_one(order_for_db)
 
-            # Xóa giỏ hàng
-            mongo.db.carts.delete_one({"user_id": ObjectId(user_id)})
+            if "user_id" in order_data:
+                print(f"Deleting cart for user: {order_data['user_id']}")
+                mongo.db.carts.delete_one({"user_id": ObjectId(order_data["user_id"])})
 
-            # Xóa session
+            session['order'] = order_for_db  # Lưu order vào session
+            session['vnp_response_code'] = vnp_response_code
             session.pop("pending_order", None)
-
-            flash("Thanh toán thành công!", "success")
-            return redirect(url_for("order_complete"))
+            print("Cleared pending_order from session")
 
         else:
-            # Thanh toán thất bại
-            flash(f"Thanh toán thất bại. Mã lỗi: {vnp_response_code}", "danger")
+            print(f"Payment failed with response code: {vnp_response_code}")
+            error_message = vnpay_error_codes.get(vnp_response_code, "Lỗi không xác định.")
+            session['vnp_error_code'] = vnp_response_code
+            session['vnp_error_message'] = error_message
+            session['vnp_response_code'] = vnp_response_code
             session.pop("pending_order", None)
-            return redirect(url_for("checkout"))
 
     except Exception as e:
-        print(f"Error in payment_return: {str(e)}")
-        flash(f"Đã xảy ra lỗi khi xử lý phản hồi thanh toán: {str(e)}", "danger")
+        print(f"ERROR in payment_return: {str(e)}")
+        session['vnp_error_code'] = "N/A"
+        session['vnp_error_message'] = f"Đã xảy ra lỗi khi xử lý phản hồi thanh toán: {str(e)}"
+        session['vnp_response_code'] = ""
         session.pop("pending_order", None)
-        return redirect(url_for("checkout"))
+
+
 
 def invoice_detail_exc(order_id):
-    # Lấy user_id từ JWT
     user_id = get_jwt_identity()
     if not user_id:
         return redirect(url_for('login'))
 
-    # Tìm đơn hàng trong database
     order = mongo.db.orders.find_one({"order_id": order_id, "user_id": ObjectId(user_id)})
     if not order:
         flash("Không tìm thấy đơn hàng.", "danger")
         return redirect(url_for('orders'))
 
-    # Chuyển đổi ObjectId thành string
     order['_id'] = str(order['_id'])
     order['user_id'] = str(order['user_id'])
 
-    # Kiểm tra và đảm bảo order['items'] là danh sách
     if 'items' not in order or not isinstance(order['items'], list):
         print(f"Invalid items data for order {order_id}: {order.get('items')}")
-        order['items'] = []  # Gán mặc định là danh sách rỗng để tránh lỗi
+        order['items'] = []
 
     return render_template('cart/invoice-detail.html', order=order)
