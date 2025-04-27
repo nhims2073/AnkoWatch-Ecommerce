@@ -67,38 +67,6 @@
                         </a>
                     </li>
                 </ul>
-                <!-- <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
-                    <span>Saved reports</span>
-                    <a class="link-secondary" href="#" aria-label="Add a new report">
-                        <i class="bi bi-plus-circle"></i>
-                    </a>
-                </h6>
-                <ul class="nav flex-column mb-2">
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">
-                            <i class="bi bi-file-text"></i>
-                            Current month
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">
-                            <i class="bi bi-file-text"></i>
-                            Last quarter
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">
-                            <i class="bi bi-file-text"></i>
-                            Social engagement
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">
-                            <i class="bi bi-file-text"></i>
-                            Year-end sale
-                        </a>
-                    </li>
-                </ul> -->
             </div>
         </nav>
 
@@ -146,38 +114,6 @@
                         </a>
                     </li>
                 </ul>
-                <!-- <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
-                    <span>Saved reports</span>
-                    <a class="link-secondary" href="#" aria-label="Add a new report">
-                        <i class="bi bi-plus-circle"></i>
-                    </a>
-                </h6>
-                <ul class="nav flex-column mb-2">
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">
-                            <i class="bi bi-file-text"></i>
-                            Current month
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">
-                            <i class="bi bi-file-text"></i>
-                            Last quarter
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">
-                            <i class="bi bi-file-text"></i>
-                            Social engagement
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">
-                            <i class="bi bi-file-text"></i>
-                            Year-end sale
-                        </a>
-                    </li>
-                </ul> -->
             </div>
         </div>
 
@@ -216,18 +152,23 @@
                     <tbody>
                         {% if customers %}
                         {% for customer in customers %}
-                        <tr>
-                            <td class="text-start">{{ loop.index }}</td>
+                        <tr class="align-middle">
+                            <td class="text-start"><strong>{{ loop.index }}</strong></td>
                             <td class="text-start">{{ customer._id }}</td>
                             <td class="text-center"><img src="{{ customer.image }}" alt="{{ customer.username }}" class="img-thumbnail" style="width: 50px; height: 50px;"></td>
                             <td class="text-center">{{ customer.username }}</td>
-                            <td class="text-center">{{ customer.fullname }}</td>
+                            <td class="text-center"><strong>{{ customer.fullname }}</strong></td>
                             <td class="text-center">{{ customer.role_name }}</td>
-                            <td class="text-end">
-                                <button class="btn btn-sm btn-info me-1" data-bs-toggle="modal" data-bs-target="#viewCustomerModal{{ customer._id }}">
+                            <td class="text-end mx-2">
+                                <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#viewCustomerModal{{ customer._id }}">
                                     <i class="bi bi-info-circle"></i>
                                 </button>
-                                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#editCustomerModal{{ customer._id }}">Edit</button>
+                                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#editCustomerModal{{ customer._id }}">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="confirmDeleteCustomer('{{ customer._id }}')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
                             </td>
                         </tr>
 
@@ -315,6 +256,8 @@
                             <th class="text-start">#</th>
                             <th class="text-start">Role ID</th>
                             <th class="text-center">Name</th>
+                            <th class="text-center">Permissions</th>
+                            <th class="text-end">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -323,7 +266,81 @@
                             <td class="text-start">{{ loop.index }}</td>
                             <td class="text-start">{{ role._id }}</td>
                             <td class="text-center">{{ role.name }}</td>
+                            <td class="text-center">
+                                {% if role.permissions %}
+                                    {% set max_display = 5 %}
+                                    {% set total_perms = role.permissions|length %}
+                                    
+                                    {% for perm in role.permissions[:max_display] %}
+                                        <span class="badge bg-secondary">{{ perm.name }}</span>
+                                    {% endfor %}
+                                    
+                                    {% if total_perms > max_display %}
+                                        <span class="badge bg-info" data-bs-toggle="tooltip" 
+                                              title="Còn {{ total_perms - max_display }} quyền khác">...</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="badge bg-danger">Không có quyền!</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end d-flex">
+                                <button class="btn btn-sm btn-primary me-1" data-bs-toggle="modal" data-bs-target="#editRoleModal{{ role._id }}">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="confirmDeleteRole('{{ role._id }}')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
                         </tr>
+
+                        <!-- Modal chỉnh sửa vai trò -->
+                        <div class="modal fade" id="editRoleModal{{ role._id }}" tabindex="-1" aria-labelledby="editRoleModalLabel{{ role._id }}" aria-hidden="true">
+                            <div class="modal-dialog modal-lg">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="editRoleModalLabel{{ role._id }}">Edit Role</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <form action="{{ url_for('admin_update_role', role_id=role._id) }}" method="POST">
+                                            <div class="mb-3">
+                                                <label for="roleId{{ role._id }}" class="form-label">Role ID</label>
+                                                <input type="text" class="form-control" id="roleId{{ role._id }}" value="{{ role._id }}" disabled>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="roleName{{ role._id }}" class="form-label">Role Name</label>
+                                                <input type="text" class="form-control" id="roleName{{ role._id }}" name="name" value="{{ role.name }}" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <div class="form-check form-switch">
+                                                    <input class="form-check-input toggle-all-permissions" type="checkbox" role="switch" 
+                                                           id="togglePermissions{{ role._id }}" data-target="editPermissions{{ role._id }}">
+                                                    <label class="form-check-label" for="togglePermissions{{ role._id }}">Cấp full quyền cho role này</label>
+                                                </div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Permissions</label>
+                                                <div class="row" id="editPermissions{{ role._id }}">
+                                                    {% for permission in permissions %}
+                                                    <div class="col-md-6">
+                                                        <div class="form-check">
+                                                            <input class="form-check-input permission-checkbox" type="checkbox" 
+                                                                   name="permission_ids" value="{{ permission._id }}"
+                                                                   {% if permission in role.permissions %}checked{% endif %}>
+                                                            <label class="form-check-label">
+                                                                <strong>{{ permission.name }}</strong>
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                            <button type="submit" class="btn btn-primary">Save</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         {% endfor %}
                     </tbody>
                 </table>
@@ -342,6 +359,29 @@
                                 <div class="mb-3">
                                     <label for="roleName" class="form-label">Role Name</label>
                                     <input type="text" class="form-control" id="roleName" name="name" required>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input toggle-all-permissions" type="checkbox" role="switch" 
+                                               id="togglePermissionsAdd" data-target="addPermissions">
+                                        <label class="form-check-label" for="togglePermissionsAdd">Cấp full quyền cho role này</label>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Permissions</label>
+                                    <div class="row" id="addPermissions">
+                                        {% for permission in permissions %}
+                                        <div class="col-md-6">
+                                            <div class="form-check">
+                                                <input class="form-check-input permission-checkbox" type="checkbox" 
+                                                       name="permission_ids" value="{{ permission._id }}">
+                                                <label class="form-check-label">
+                                                    <strong>{{ permission.name }}</strong>
+                                                </label>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
                                 </div>
                                 <button type="submit" class="btn btn-primary">Save</button>
                             </form>
@@ -376,6 +416,137 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             }
         }
+    });
+});
+
+function confirmDeleteCustomer(customerId) {
+    Swal.fire({
+        title: 'Bạn có chắc chắn?',
+        text: "Bạn sẽ không thể khôi phục người dùng này sau khi xóa!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Xóa',
+        cancelButtonText: 'Hủy'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Gửi yêu cầu xóa người dùng
+            fetch(`/admin/delete_customer/${customerId}`, {
+                method: 'POST'
+            }).then(response => response.json()).then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        title: 'Thành công!',
+                        text: data.success,
+                        icon: 'success',
+                        timer: 1500,
+                        showConfirmButton: false,
+                        timerProgressBar: true
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Lỗi!',
+                        text: data.error,
+                        icon: 'error',
+                        timer: 1500,
+                        showConfirmButton: false,
+                        timerProgressBar: true
+                    });
+                }
+            });
+        }
+    });
+}
+
+// Hàm xác nhận xóa vai trò
+function confirmDeleteRole(roleId) {
+    Swal.fire({
+        title: 'Bạn có chắc chắn?',
+        text: "Bạn sẽ không thể khôi phục vai trò này sau khi xóa!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Xóa',
+        cancelButtonText: 'Hủy'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Gửi yêu cầu xóa vai trò
+            fetch(`/admin/delete_role/${roleId}`, {
+                method: 'POST'
+            }).then(response => response.json()).then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        title: 'Thành công!',
+                        text: data.success,
+                        icon: 'success',
+                        timer: 1500,
+                        showConfirmButton: false,
+                        timerProgressBar: true
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Lỗi!',
+                        text: data.error,
+                        icon: 'error',
+                        timer: 1500,
+                        showConfirmButton: false,
+                        timerProgressBar: true
+                    });
+                }
+            });
+        }
+    });
+}
+
+// Add this to your existing script section
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle toggle all permissions switches
+    document.querySelectorAll('.toggle-all-permissions').forEach(toggle => {
+        toggle.addEventListener('change', function() {
+            const targetId = this.getAttribute('data-target');
+            const permissionCheckboxes = document.getElementById(targetId).querySelectorAll('.permission-checkbox');
+            
+            permissionCheckboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+        });
+    });
+
+    // Update toggle state based on checkboxes
+    document.querySelectorAll('.permission-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const container = this.closest('.row');
+            const toggleSwitch = document.querySelector(`[data-target="${container.id}"]`);
+            const allCheckboxes = container.querySelectorAll('.permission-checkbox');
+            const allChecked = Array.from(allCheckboxes).every(cb => cb.checked);
+            const allUnchecked = Array.from(allCheckboxes).every(cb => !cb.checked);
+            
+            if (allChecked) {
+                toggleSwitch.checked = true;
+                toggleSwitch.indeterminate = false;
+            } else if (allUnchecked) {
+                toggleSwitch.checked = false;
+                toggleSwitch.indeterminate = false;
+            } else {
+                toggleSwitch.checked = false;
+                toggleSwitch.indeterminate = true;
+            }
+        });
+    });
+});
+</script>
+<script src="{{ url_for('static', filename='js/token-handler.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
     });
 });
 </script>

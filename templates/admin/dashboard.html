@@ -205,7 +205,9 @@
                     </div>
                     <div class="btn-group me-2">
                         <button type="button" class="btn btn-sm btn-outline-secondary">Share</button>
-                        <button type="button" class="btn btn-sm btn-outline-secondary">Export</button>
+                        <div class="export-btn">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="exportToExcel()">Export</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -383,6 +385,42 @@
         const selectedYear = document.getElementById('yearSelect').value;
         window.location.href = '/admin/dashboard?filter=' + filterType + '&year=' + selectedYear;
     }
+
+    // Hàm xuất dữ liệu ra file Excel
+    function exportToExcel() {
+            // Chuẩn bị dữ liệu cho file Excel
+            const exportData = [];
+
+            // Thêm tiêu đề cột
+            const headers = ['Thời gian'].concat(stats.revenue_labels);
+            exportData.push(headers);
+
+            // Thêm dữ liệu doanh thu
+            const revenueRow = ['Doanh thu (VNĐ)'].concat(stats.revenue_data);
+            exportData.push(revenueRow);
+
+            // Thêm dữ liệu lợi nhuận
+            const profitRow = ['Lợi nhuận (VNĐ)'].concat(stats.profit_data);
+            exportData.push(profitRow);
+
+            // Thêm thông tin tổng quan
+            exportData.push([]); // Dòng trống
+            exportData.push(['Tổng số sản phẩm', stats.total_products]);
+            exportData.push(['Tổng số đơn hàng', stats.total_orders]);
+            exportData.push(['Tổng số thành viên', stats.total_users]);
+            exportData.push(['Tổng số voucher', stats.total_vouchers]);
+
+            // Tạo worksheet từ dữ liệu
+            const worksheet = XLSX.utils.aoa_to_sheet(exportData);
+
+            // Tạo workbook và thêm worksheet
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'Dashboard Data');
+
+            // Xuất file Excel
+            XLSX.writeFile(workbook, 'dashboard_data.xlsx');
+        }
 </script>
+<script src="{{ url_for('static', filename='js/token-handler.js') }}"></script>
 </body>
 </html>
