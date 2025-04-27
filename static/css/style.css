@@ -179,3 +179,7 @@ input[type="number"] {
     background-color: #ee4d2d !important;
     color: white !important;
 }
+
+.delete-order-btn{
+    padding: 6px 12px;
+}
