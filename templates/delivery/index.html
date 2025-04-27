@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>   
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">   
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- <link href="{{ url_for('static', filename='css/deli_style.css') }}" rel="stylesheet"> -->
+  
+    <title>Anko Watch - Delivery</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f8f9fa;
+        }
+        .hero-section {
+            background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('https://images.unsplash.com/photo-1586528116311-ad8dd3a8dd3f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80');
+            background-size: cover;
+            background-position: center;
+            color: white;
+            padding: 120px 0;
+            text-align: center;
+        }
+        .hero-section h1 {
+            font-size: 3.5rem;
+            font-weight: bold;
+        }
+        .hero-section p {
+            font-size: 1.5rem;
+            margin-bottom: 30px;
+        }
+        .feature-card, .process-card, .service-card {
+            transition: transform 0.3s;
+        }
+        .feature-card:hover, .process-card:hover, .service-card:hover {
+            transform: translateY(-10px);
+        }
+        .track-btn {
+            display: inline-block;
+            transform: rotate(-10deg);
+            transition: transform 0.3s ease;
+        }
+
+        .track-section {
+            background-color: #ffffff;
+            padding: 60px 0;
+        }
+        .testimonial-section {
+            background-color: #f1f1f1;
+            padding: 60px 0;
+        }
+        .process-section {
+            background-color: #ffffff;
+            padding: 60px 0;
+        }
+        .service-section {
+            background-color: #f8f9fa;
+            padding: 60px 0;
+        }
+        .faq-section {
+            background-color: #ffffff;
+            padding: 60px 0;
+        }
+        .contact-section {
+            background-color: #f1f1f1;
+            padding: 60px 0;
+        }
+        .map-placeholder {
+            background-color: #e9ecef;
+            height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6c757d;
+            font-size: 1.2rem;
+        }
+        @media (max-width: 768px) {
+            .hero-section h1 {
+                font-size: 2.5rem;
+            }
+            .hero-section p {
+                font-size: 1.2rem;
+            }
+            .process-card img {
+                height: 150px;
+            }
+        }
+        /* Responsive iframe */
+        .map-container {
+            position: relative;
+            padding-bottom: 56.25%; /* Tỷ lệ 16:9, có thể đổi thành 75% cho 4:3 */
+            height: 0;
+            overflow: hidden;
+        }
+        .map-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+        @media (max-width: 768px) {
+            .hero-section h1 {
+                font-size: 2.5rem;
+            }
+            .hero-section p {
+                font-size: 1.2rem;
+            }
+            .process-card img {
+                height: 150px;
+            }
+            .map-container {
+                padding-bottom: 75%; /* Tỷ lệ cao hơn trên mobile để gọn hơn */
+            }
+        }
+        @media (max-width: 768px) {
+            .track-btn {
+                transform: rotate(-10deg);
+            }
+        }
+    </style>
+</head>
+<body>    
+    {% include 'base/deli_header.html' %}
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container">
+            <h1>Anko Watch Delivery</h1>
+            <p>Giao hàng nhanh chóng - An toàn tuyệt đối - Giá cả hợp lý</p>
+            <a href="#track-order" class="btn btn-primary btn-lg track-btn">Đặt ngay!</a>
+        </div>
+    </section>
+
+    <!-- Track Order Section -->
+    <section class="track-section" id="track-order">
+        <div class="container">
+            <h2 class="text-center mb-5">Theo dõi đơn hàng</h2>
+            <div class="row justify-content-center">
+                <div class="col-md-6">
+                    <form action="{{ url_for('delivery') }}" method="GET" class="input-group">
+                        <input type="text" class="form-control" placeholder="Nhập mã đơn hàng" name="order_id" required>
+                        <button type="submit" class="btn btn-primary">Tra cứu</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="py-5">
+        <div class="container">
+            <h2 class="text-center mb-5">Tại sao chọn Anko Watch Delivery?</h2>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card feature-card border-0 shadow-sm text-center p-4">
+                        <i class="bi bi-truck text-primary" style="font-size: 3rem;"></i>
+                        <h5 class="mt-3">Giao hàng nhanh</h5>
+                        <p>Cam kết giao hàng trong 24-48 giờ với đội ngũ chuyên nghiệp.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card feature-card border-0 shadow-sm text-center p-4">
+                        <i class="bi bi-shield-check text-primary" style="font-size: 3rem;"></i>
+                        <h5 class="mt-3">An toàn tuyệt đối</h5>
+                        <p>Hàng hóa được bảo vệ và theo dõi liên tục suốt hành trình.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card feature-card border-0 shadow-sm text-center p-4">
+                        <i class="bi bi-wallet2 text-primary" style="font-size: 3rem;"></i>
+                        <h5 class="mt-3">Giá cả hợp lý</h5>
+                        <p>Chi phí minh bạch, cạnh tranh, không mất thêm chi phí ẩn.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Process Section -->
+    <section class="process-section">
+        <div class="container">
+            <h2 class="text-center mb-5">Quy trình vận chuyển của chúng tôi</h2>
+            <div class="row g-4">
+                <div class="col-md-3">
+                    <div class="card process-card border-0 shadow-sm text-center p-4">
+                        <img src="https://images.unsplash.com/photo-1578575437130-527eed3abbec?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" class="card-img-top mx-auto" style="height: 200px; object-fit: cover;" alt="Nhận hàng">
+                        <div class="card-body">
+                            <h5 class="mt-3">1. Nhận hàng</h5>
+                            <p>Chúng tôi nhận hàng từ bạn tại địa điểm yêu cầu.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card process-card border-0 shadow-sm text-center p-4">
+                        <img src="https://images.unsplash.com/photo-1581467655412-0e6e01c6d616?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" class="card-img-top mx-auto" style="height: 200px; object-fit: cover;" alt="Xử lý">
+                        <div class="card-body">
+                            <h5 class="mt-3">2. Xử lý</h5>
+                            <p>Hàng hóa được phân loại và đóng gói cẩn thận.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card process-card border-0 shadow-sm text-center p-4">
+                        <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" class="card-img-top mx-auto" style="height: 200px; object-fit: cover;" alt="Vận chuyển">
+                        <div class="card-body">
+                            <h5 class="mt-3">3. Vận chuyển</h5>
+                            <p>Đội xe hiện đại đưa hàng đến đích nhanh chóng.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card process-card border-0 shadow-sm text-center p-4">
+                        <img src="https://images.unsplash.com/photo-1567721913488-6c33a1ffe763?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" class="card-img-top mx-auto" style="height: 200px; object-fit: cover;" alt="Giao hàng">
+                        <div class="card-body">
+                            <h5 class="mt-3">4. Giao hàng</h5>
+                            <p>Giao tận tay khách hàng với dịch vụ tận tâm.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section class="service-section">
+        <div class="container">
+            <h2 class="text-center mb-5">Dịch vụ đặc biệt</h2>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card service-card border-0 shadow-sm text-center p-4">
+                        <i class="bi bi-airplane text-primary" style="font-size: 3rem;"></i>
+                        <h5 class="mt-3">Giao hàng quốc tế</h5>
+                        <p>Vận chuyển hàng hóa đến hơn 50 quốc gia với chi phí hợp lý.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card service-card border-0 shadow-sm text-center p-4">
+                        <i class="bi bi-lightning-charge text-primary" style="font-size: 3rem;"></i>
+                        <h5 class="mt-3">Giao hàng hỏa tốc</h5>
+                        <p>Giao hàng trong ngày với dịch vụ siêu tốc độ.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card service-card border-0 shadow-sm text-center p-4">
+                        <i class="bi bi-box-seam text-primary" style="font-size: 3rem;"></i>
+                        <h5 class="mt-3">Đóng gói chuyên nghiệp</h5>
+                        <p>Đảm bảo hàng hóa an toàn với bao bì chất lượng cao.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="testimonial-section">
+        <div class="container">
+            <h2 class="text-center mb-5">Khách hàng nói gì?</h2>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm p-4">
+                        <p class="fst-italic">"Giao hàng siêu nhanh, đóng gói cẩn thận. Rất hài lòng!"</p>
+                        <h6 class="mt-3">Nguyễn Văn A</h6>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm p-4">
+                        <p class="fst-italic">"Dịch vụ chuyên nghiệp, tôi luôn chọn Anko Watch Delivery."</p>
+                        <h6 class="mt-3">Trần Thị B</h6>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm p-4">
+                        <p class="fst-italic">"Hỗ trợ tận tình, giá cả hợp lý. Sẽ tiếp tục sử dụng!"</p>
+                        <h6 class="mt-3">Lê Văn C</h6>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm p-4">
+                        <p class="fst-italic">"Giao hàng đúng hẹn, nhân viên thân thiện."</p>
+                        <h6 class="mt-3">Phạm Thị D</h6>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm p-4">
+                        <p class="fst-italic">"Rất tiện lợi với hệ thống theo dõi đơn hàng."</p>
+                        <h6 class="mt-3">Hoàng Văn E</h6>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm p-4">
+                        <p class="fst-italic">"Anko đã giúp tôi vận chuyển hàng quốc tế dễ dàng."</p>
+                        <h6 class="mt-3">Ngô Thị F</h6>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="faq-section">
+        <div class="container">
+            <h2 class="text-center mb-5">Câu hỏi thường gặp</h2>
+            <div class="accordion" id="faqAccordion">
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="faq1">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse1" aria-expanded="true" aria-controls="collapse1">
+                            Làm sao để theo dõi đơn hàng?
+                        </button>
+                    </h2>
+                    <div id="collapse1" class="accordion-collapse collapse show" aria-labelledby="faq1" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Bạn chỉ cần nhập mã đơn hàng vào form "Theo dõi đơn hàng" trên trang chủ. Hệ thống sẽ hiển thị trạng thái chi tiết của đơn hàng.
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="faq2">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse2" aria-expanded="false" aria-controls="collapse2">
+                            Thời gian giao hàng là bao lâu?
+                        </button>
+                    </h2>
+                    <div id="collapse2" class="accordion-collapse collapse" aria-labelledby="faq2" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Đối với giao hàng nội địa, thời gian từ 24-48 giờ. Giao hàng quốc tế tùy thuộc vào điểm đến, thường từ 3-7 ngày.
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="faq3">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse3" aria-expanded="false" aria-controls="collapse3">
+                            Chi phí vận chuyển được tính như thế nào?
+                        </button>
+                    </h2>
+                    <div id="collapse3" class="accordion-collapse collapse" aria-labelledby="faq3" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Chi phí dựa trên khối lượng, kích thước hàng hóa, và khoảng cách vận chuyển. Liên hệ hotline 1900 1234 để được báo giá chi tiết.
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="faq4">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse4" aria-expanded="false" aria-controls="collapse4">
+                            Tôi có thể thay đổi địa chỉ giao hàng không?
+                        </button>
+                    </h2>
+                    <div id="collapse4" class="accordion-collapse collapse" aria-labelledby="faq4" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Có, bạn có thể thay đổi địa chỉ trước khi đơn hàng được xử lý. Liên hệ qua email info@ankx.com để được hỗ trợ.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section class="contact-section">
+        <div class="container">
+            <h2 class="text-center mb-5">Liên hệ với chúng tôi</h2>
+            <div class="row g-4">
+                <div class="col-md-4 text-center">
+                    <i class="bi bi-telephone-fill text-primary" style="font-size: 2rem;"></i>
+                    <h5 class="mt-3">Hotline</h5>
+                    <p>1900 1234</p>
+                </div>
+                <div class="col-md-4 text-center">
+                    <i class="bi bi-envelope-fill text-primary" style="font-size: 2rem;"></i>
+                    <h5 class="mt-3">Email</h5>
+                    <p>info@ankx.com</p>
+                </div>
+                <div class="col-md-4 text-center">
+                    <i class="bi bi-geo-alt-fill text-primary" style="font-size: 2rem;"></i>
+                    <h5 class="mt-3">Địa chỉ</h5>
+                    <p>123 Đường ABC, TP. Hồ Chí Minh</p>
+                </div>
+            </div>
+            <div class="row mt-5">
+                <div class="col-md-6">
+                    <h4>Gửi tin nhắn cho chúng tôi</h4>
+                    <form action="#" method="POST">
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Họ và tên</label>
+                            <input type="text" class="form-control" id="name" name="name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="message" class="form-label">Tin nhắn</label>
+                            <textarea class="form-control" id="message" name="message" rows="5" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Gửi</button>
+                    </form>
+                </div>
+                <div class="col-md-6">
+                    <h4>Chúng tôi ở đâu?</h4>
+                    <div class="map-container">
+                        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3724.460027105507!2d105.81127187490226!3d21.014271480631347!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3135ab63af7507f7%3A0xbba088c594cbb592!2zQ2h1bmcgY8awIDk3LTk5IEzDoW5nIEjhuqE!5e0!3m2!1sen!2s!4v1744709242114!5m2!1sen!2s" width="800" height="335" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {% include 'base/deli_footer.html' %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script>
+        // Xử lý form theo dõi đơn hàng
+        document.querySelector('.track-section .input-group').addEventListener('submit', function(e) {
+            const orderId = this.querySelector('input[name="order_id"]').value;
+            if (!orderId) {
+                e.preventDefault();
+                alert('Vui lòng nhập mã đơn hàng!');
+            }
+        });
+        // Xử lý form liên hệ (giả lập)
+        document.querySelector('.contact-section form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('Cảm ơn bạn đã gửi tin nhắn! Chúng tôi sẽ liên hệ sớm.');
+            this.reset();
+        });
+        
+    </script>
+</body>
+</html>
