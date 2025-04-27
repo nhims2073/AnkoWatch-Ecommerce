@@ -1,34 +1,34 @@
 import json
 from bson import ObjectId
-from flask import jsonify, render_template, request, make_response, flash, redirect, url_for, session
-from flask_jwt_extended import  get_jwt_identity, jwt_required
+from flask import Blueprint, jsonify, render_template, request, make_response, flash, redirect, url_for, session
+from flask_jwt_extended import get_jwt_identity, jwt_required
 from services.account import change_password_exc
 from services.account.account_exc import get_user_info, update_user_info
 from services.account.address_exc import add_address_exc, delete_address_exc, get_addresses_exc, update_address_exc
 from services.account.favourites_exc import add_to_favourites_exc, get_favorite_products_exc, remove_from_favorites_exc
 from services.account.orders_exc import get_orders
 from services.admin.product_exc import add_brand_exc, add_category_exc, add_product_exc, delete_brand_exc, delete_category_exc, delete_product_exc, get_all_brands_exc, get_all_categories_exc, get_all_products_exc, update_brand_exc, update_category_exc, update_product_exc
-from services.admin.report_exc import get_revenue_report
+from services.admin.report_exc import export_revenue_report_to_excel, get_revenue_report
 from services.admin.vouchers_exc import add_voucher_exc, delete_voucher_exc, get_all_vouchers, get_voucher_details, update_voucher_exc
 from services.cart import add_to_cart, remove_cart, update_cart
 from services.cart.cart import cart_exc
 from services.cart.cart_count import cart_count_exc
-from services.cart.payment_exc import payment_return
-from services.middleware import role_required
-from app import app, mongo
+from services.middleware import permission_required, role_required
+from app import app, mongo, cache
 from services.auth.register_exc import register_exc
 from services.auth.login_exc import login_exc
 from flask_login import logout_user
 from services.policy.news_exc import get_all_news, get_news_detail
 from services.product.product_detail_exc import product_detail_exc
 from services.product.search_exc import search_exc
-from services.cart.checkout import apply_voucher_exc, checkout_exc, invoice_detail_exc
-from services.admin.customer_exc import get_all_customers_exc, update_customer_role_exc, get_all_roles_exc, add_role_exc
+from services.cart.checkout import apply_voucher_exc, checkout_exc, invoice_detail_exc, payment_return
+from services.admin.customer_exc import delete_customer_exc, delete_role_exc, get_all_customers_exc, get_all_permissions_exc, update_customer_role_exc, get_all_roles_exc, add_role_exc, update_role_exc
 from services.admin.dashboard_exc import get_dashboard_stats
-from services.admin.orders_exc import get_all_orders, get_orders_by_status, get_order_details
+from services.admin.orders_exc import get_all_orders, get_orders_by_status, get_order_details, update_order_status
 
 # User Routes
 @app.route('/')
+@cache.cached(timeout=300)  # Cache 5 phút
 def home():
     # Lấy danh sách sản phẩm bán chạy từ collection products
     products = list(mongo.db.products.find(
@@ -46,33 +46,28 @@ def home():
         else:
             product['brand'] = "Không xác định"
         # Đảm bảo price, discount và discounted_price có giá trị hợp lệ
-        product['price'] = float(product.get('price', 0))  # Đảm bảo price là số, mặc định là 0 nếu không có
-        product['discount'] = float(product.get('discount', 0))  # Đảm bảo discount là số
-        product['discounted_price'] = float(product.get('discounted_price', product['price']))  # Đảm bảo discounted_price là số
+        product['price'] = float(product.get('price', 0))
+        product['discount'] = float(product.get('discount', 0))
+        product['discounted_price'] = float(product.get('discounted_price', product['price']))
 
-    # Lấy danh sách sản phẩm khuyến mãi từ collection products (chỉ lấy các sản phẩm có discount > 0)
+    # Lấy danh sách sản phẩm khuyến mãi từ collection products
     sale_products = list(mongo.db.products.find(
         {"discount": {"$exists": True, "$gt": 0}},
         {"_id": 1, "name": 1, "brand_id": 1, "image": 1, "price": 1, "discount": 1, "discounted_price": 1}
     ).sort("_id", -1).limit(8))
     
-    # Duyệt qua từng sản phẩm khuyến mãi để lấy tên thương hiệu và tính toán giá
     for product in sale_products:
         product['_id'] = str(product['_id'])
-        # Truy vấn collection brands để lấy tên thương hiệu
         if 'brand_id' in product and product['brand_id']:
             brand = mongo.db.brands.find_one({"_id": ObjectId(product['brand_id'])}, {"name": 1})
             product['brand'] = brand['name'] if brand else "Không xác định"
         else:
             product['brand'] = "Không xác định"
-        # Đảm bảo price, discount và discounted_price có giá trị hợp lệ
-        product['price'] = float(product.get('price', 0))  # Đảm bảo price là số
-        product['discount'] = float(product.get('discount', 0))  # Đảm bảo discount là số
-        product['discounted_price'] = float(product.get('discounted_price', product['price']))  # Đảm bảo discounted_price là số
-        # Gán discount_percent để hiển thị phần trăm giảm giá
+        product['price'] = float(product.get('price', 0))
+        product['discount'] = float(product.get('discount', 0))
+        product['discounted_price'] = float(product.get('discounted_price', product['price']))
         product['discount_percent'] = int(product['discount'])
 
-    # Kiểm tra xem người dùng đã đăng nhập chưa trước khi render template
     try:
         from flask_jwt_extended import verify_jwt_in_request
         verify_jwt_in_request(optional=True)
@@ -123,15 +118,14 @@ def account():
     return render_template('account/account.html', current_user=user)
 
 @app.route('/orders')
-@jwt_required()
 def orders():
     if not session.get("user_id"):
         return redirect(url_for('auth.login'))
 
-    orders = get_orders()  # Hàm này đã xử lý ObjectId chuyển thành chuỗi
+    orders = get_orders()
     if not orders:
         flash("Không có đơn hàng nào", "danger")
-        orders = []  # Đảm bảo orders là một danh sách trống nếu không có đơn hàng
+        orders = []
     return render_template('account/list-orders.html', current_user=get_user_info(), orders=orders) 
 
 @app.route('/favourites', methods=['GET', 'POST'])
@@ -165,7 +159,6 @@ def address():
     success_message = session.pop('success_message', None)
     error_message = session.pop('error_message', None)
     
-    # Đảm bảo success_message và error_message là chuỗi rỗng nếu None
     success_message = success_message if success_message else ''
     error_message = error_message if error_message else ''
     
@@ -225,51 +218,39 @@ def change_password():
         return render_template('account/change-password.html', current_user=get_user_info(), **result)
 
     return render_template('account/change-password.html', current_user=get_user_info())
-    
-# @app.route('/payments', methods=['GET', 'POST'])
-# @jwt_required()
-# def payments_route():
-#     from services.cart.payment_exc import process_payment
-#     return process_payment()
 
 @app.route('/payment_return', methods=['GET'])
-@jwt_required()
 def payment_return_route():
-    return payment_return()
-
-@app.route('/cart/order-complete')
-@jwt_required()
-def order_complete():
-    # Lấy user_id từ JWT
-    user_id = get_jwt_identity()
-    if not user_id:
-        return redirect(url_for('login'))
-
-    # Lấy thông tin đơn hàng từ session (nếu có)
-    order = session.get('pending_order')
-    if not order:
-        # Nếu không có trong session, thử lấy đơn hàng gần nhất của người dùng từ database
-        order = mongo.db.orders.find_one(
-            {"user_id": ObjectId(user_id)},
-            sort=[("order_date", -1)]  # Sắp xếp theo ngày đặt hàng, lấy đơn hàng mới nhất
-        )
-        if not order:
-            flash("Không tìm thấy đơn hàng.", "danger")
-            return redirect(url_for('orders'))
-
-    # Chuyển đổi ObjectId thành string nếu lấy từ database
-    if '_id' in order:
-        order['_id'] = str(order['_id'])
-        order['user_id'] = str(order['user_id'])
-
-    return render_template('cart/order-complete.html', order=order)
+    print(f"Reached /payment_return route with args: {request.args.to_dict()}")
+    print(f"Request headers: {request.headers}")
+    
+    result = payment_return()
+    
+    if isinstance(result, tuple) and result[0].status_code in (301, 302):
+        return result
+    
+    order = session.get('order')
+    vnp_response_code = session.get('vnp_response_code', '')
+    vnp_error_code = session.get('vnp_error_code', 'N/A')
+    vnp_error_message = session.get('vnp_error_message', 'Đã xảy ra lỗi không xác định trong quá trình thanh toán.')
+    
+    session.pop('order', None)
+    session.pop('vnp_response_code', None)
+    session.pop('vnp_error_code', None)
+    session.pop('vnp_error_message', None)
+    
+    return render_template('cart/payment_return.html',
+                         order=order,
+                         vnp_response_code=vnp_response_code,
+                         vnp_error_code=vnp_error_code,
+                         vnp_error_message=vnp_error_message)
 
 @app.route('/invoice/<order_id>')
 @jwt_required()
 def invoice_detail(order_id):
     return invoice_detail_exc(order_id)
 
-#Error Routes
+# Error Routes
 @app.route('/404')
 def error_404():
     return render_template('error/404.html')
@@ -311,9 +292,9 @@ def remove_from_cart_route(product_id):
     return remove_cart.remove_cart_exc(product_id)
 
 @app.route('/search')
+@cache.cached(timeout=300, query_string=True)  # Cache 5 phút, bao gồm query parameters
 def search():
     product_list, category_mapping, message = search_exc()
-    # Lấy các tham số để hiển thị lại trên giao diện
     query = request.args.get('q', '')
     category = request.args.get('category', '')
     sort = request.args.get('sort', 'relevance')
@@ -343,25 +324,22 @@ def policy():
 @app.route('/admin/dashboard')
 @jwt_required()
 @role_required('admin')
+@permission_required('MANAGE_DASHBOARD')
 def dashboard():
     return get_dashboard_stats()    
 
 @app.route('/admin/orders')
 @jwt_required()
-@role_required('admin')
+@permission_required('MANAGE_ORDERS')
+@cache.cached(timeout=300)  # Cache 5 phút
 def admin_orders():
-    # Lấy tất cả đơn hàng
     all_orders = get_all_orders()
     for order in all_orders:
-        # Chuyển ObjectId thành chuỗi
         order['_id'] = str(order['_id'])
-        # Đảm bảo trường items là danh sách
         order['items'] = order.get('items', [])
-        # Đảm bảo các trường khác
         order['customer_name'] = order.get('customer_name', order.get('receiver_name', 'Không xác định'))
         order['status'] = order.get('status', order.get('delivery_status', 'Không xác định'))
 
-    # Lấy các đơn hàng theo trạng thái
     waiting_for_shipping = get_orders_by_status("waiting_for_shipping")
     for order in waiting_for_shipping:
         order['_id'] = str(order['_id'])
@@ -407,26 +385,20 @@ def admin_orders():
 
 @app.route('/admin/order/<order_id>')
 @jwt_required()
-@role_required('admin')
+@permission_required('MANAGE_ORDERS')
+@cache.cached(timeout=300)  # Cache 5 phút
 def admin_order_details(order_id):
     try:
-        # Lấy chi tiết đơn hàng từ database
         order = get_order_details(order_id)
         if order:
-            # Chuyển ObjectId thành chuỗi để trả về JSON
             order['_id'] = str(order['_id'])
-            
-            # Đảm bảo các trường cần thiết cho JavaScript
             order['order_id'] = order['_id']
-            
-            # Đảm bảo các trường khác tồn tại, nếu không thì gán giá trị mặc định
             order['receiver_name'] = order.get('receiver_name', 'Không xác định')
             order['delivery_status'] = order.get('delivery_status', order.get('status', 'Không xác định'))
             order['receiver_address'] = order.get('receiver_address', 'Không xác định')
             order['payment_method'] = order.get('payment_method', 'Không xác định')
             order['items'] = order.get('items', [])
 
-            # Tính toán total_amount dựa trên items
             total_amount = 0
             for item in order['items']:
                 quantity = item.get('quantity', 0)
@@ -434,7 +406,6 @@ def admin_order_details(order_id):
                 total_amount += quantity * price
             order['total_amount'] = total_amount
 
-            # Định dạng lại items nếu cần
             for item in order['items']:
                 item['name'] = item.get('name', 'Không xác định')
                 item['quantity'] = item.get('quantity', 0)
@@ -446,46 +417,47 @@ def admin_order_details(order_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
-@app.route('/admin/update_order_status/<order_id>', methods=['POST'])
+@app.route('/admin/update-order-status', methods=['POST'])
 @jwt_required()
-@role_required('admin')
-def update_order_status(order_id):
+@permission_required('MANAGE_ORDERS')
+def admin_update_order_status():
     try:
-        data = request.get_json()
-        new_status = data.get('status')
+        order_id = request.form.get('order_id')
+        delivery_status = request.form.get('delivery_status')
+        payment_status = request.form.get('payment_status')
 
-        # Debug: In giá trị new_status
-        print(f"Received status: {new_status}")
+        if not order_id:
+            return jsonify({"success": False, "message": "Thiếu order_id"}), 400
 
-        if not new_status:
-            return jsonify({"error": "Trạng thái không được cung cấp"}), 400
-
-        # Danh sách trạng thái hợp lệ, khớp với database và dropdown
-        valid_statuses = ["pending", "waiting_for_shipping", "waiting_for_delivery", 
-                         "completed", "cancelled", "returned"]
-        
-        if new_status not in valid_statuses:
-            print(f"Invalid status: {new_status} not in {valid_statuses}")
-            return jsonify({"error": "Trạng thái không hợp lệ"}), 400
-
-        # Cập nhật trạng thái trong database
-        result = mongo.db.orders.update_one(
-            {"_id": ObjectId(order_id)},
-            {"$set": {"delivery_status": new_status}}
-        )
-
-        if result.modified_count > 0:
-            return jsonify({"success": True})
-        else:
-            return jsonify({"error": "Không tìm thấy đơn hàng hoặc không có thay đổi"}), 404
+        result = update_order_status(order_id, delivery_status, payment_status)
+        if result['success']:
+            cache.delete_memoized(admin_orders)  # Xóa cache của /admin/orders
+            cache.delete_memoized(admin_order_details, order_id)  # Xóa cache của chi tiết đơn hàng
+        return jsonify(result), 200 if result['success'] else 400
 
     except Exception as e:
-        print(f"Error in update_order_status: {str(e)}")
-        return jsonify({"error": str(e)}), 500
+        print(f"Error in admin_update_order_status: {str(e)}")
+        return jsonify({"success": False, "message": f"Lỗi server: {str(e)}"}), 500
+
+@app.route('/admin/delete-order/<order_id>', methods=['DELETE'])
+@jwt_required()
+@permission_required('MANAGE_ORDERS')
+def delete_order(order_id):
+    try:
+        result = mongo.db.orders.delete_one({"_id": ObjectId(order_id)})
+        if result.deleted_count > 0:
+            cache.delete_memoized(admin_orders)  # Xóa cache của /admin/orders
+            cache.delete_memoized(admin_order_details, order_id)  # Xóa cache của chi tiết đơn hàng
+            return jsonify({"success": True, "message": "Đơn hàng đã được xóa."})
+        else:
+            return jsonify({"success": False, "message": "Không tìm thấy đơn hàng."}), 404
+    except Exception as e:
+        return jsonify({"success": False, "message": f"Lỗi server: {str(e)}"}), 500
 
 @app.route('/admin/products')
 @jwt_required()
-@role_required('admin')
+@permission_required('MANAGE_PRODUCTS')
+@cache.cached(timeout=300)  # Cache 5 phút
 def products():
     products = get_all_products_exc()
     categories = get_all_categories_exc()
@@ -493,11 +465,15 @@ def products():
     return render_template('admin/products.html', products=products, categories=categories, brands=brands)
 
 @app.route('/admin/add_product', methods=['POST'])
-@role_required("admin")
+@jwt_required()
+@permission_required('MANAGE_PRODUCTS')
 def admin_add_product():
     data = request.form
     file = request.files.get('image')
     result = add_product_exc(data, file)
+    if result.get("success"):
+        cache.delete_memoized(products)  # Xóa cache của /admin/products
+        cache.delete_memoized(home)  # Xóa cache của trang chủ
     response = make_response(redirect(url_for('products')))
     if "success" in result:
         response.headers['HX-Trigger'] = json.dumps({
@@ -518,11 +494,15 @@ def admin_add_product():
     return response
 
 @app.route('/admin/update_product/<product_id>', methods=['POST'])
-@role_required("admin")
+@jwt_required()
+@permission_required('MANAGE_PRODUCTS')
 def admin_update_product(product_id):
     data = request.form
     file = request.files.get('image')
     result = update_product_exc(product_id, data, file)
+    if result.get("success"):
+        cache.delete_memoized(products)  # Xóa cache của /admin/products
+        cache.delete_memoized(home)  # Xóa cache của trang chủ
     response = make_response(redirect(url_for('products')))
     if "success" in result:
         response.headers['HX-Trigger'] = json.dumps({
@@ -543,9 +523,13 @@ def admin_update_product(product_id):
     return response
 
 @app.route('/admin/delete_product/<product_id>', methods=['POST'])
-@role_required("admin")
+@jwt_required()
+@permission_required('MANAGE_PRODUCTS')
 def admin_delete_product(product_id):
     result = delete_product_exc(product_id)
+    if result.get("success"):
+        cache.delete_memoized(products)  # Xóa cache của /admin/products
+        cache.delete_memoized(home)  # Xóa cache của trang chủ
     response = make_response(redirect(url_for('products')))
     if "success" in result:
         response.headers['HX-Trigger'] = json.dumps({
@@ -566,10 +550,13 @@ def admin_delete_product(product_id):
     return response
 
 @app.route('/admin/add_category', methods=['POST'])
-@role_required("admin")
+@jwt_required()
+@permission_required('MANAGE_PRODUCTS')
 def admin_add_category():
     data = request.form
     result = add_category_exc(data)
+    if result.get("success"):
+        cache.delete_memoized(products)  # Xóa cache của /admin/products
     response = make_response(redirect(url_for('products')))
     if "success" in result:
         response.headers['HX-Trigger'] = json.dumps({
@@ -590,10 +577,13 @@ def admin_add_category():
     return response
 
 @app.route('/admin/update_category/<category_id>', methods=['POST'])
-@role_required("admin")
+@jwt_required()
+@permission_required('MANAGE_PRODUCTS')
 def admin_update_category(category_id):
     data = request.form
     result = update_category_exc(category_id, data)
+    if result.get("success"):
+        cache.delete_memoized(products)  # Xóa cache của /admin/products
     response = make_response(redirect(url_for('products')))
     if "success" in result:
         response.headers['HX-Trigger'] = json.dumps({
@@ -614,9 +604,12 @@ def admin_update_category(category_id):
     return response
 
 @app.route('/admin/delete_category/<category_id>', methods=['POST'])
-@role_required("admin")
+@jwt_required()
+@permission_required('MANAGE_PRODUCTS')
 def admin_delete_category(category_id):
     result = delete_category_exc(category_id)
+    if result.get("success"):
+        cache.delete_memoized(products)  # Xóa cache của /admin/products
     response = make_response(redirect(url_for('products')))
     if "success" in result:
         response.headers['HX-Trigger'] = json.dumps({
@@ -637,10 +630,14 @@ def admin_delete_category(category_id):
     return response
 
 @app.route('/admin/add_brand', methods=['POST'])
-@role_required("admin")
+@jwt_required()
+@permission_required('MANAGE_PRODUCTS')
 def admin_add_brand():
     data = request.form
     result = add_brand_exc(data)
+    if result.get("success"):
+        cache.delete_memoized(products)  # Xóa cache của /admin/products
+        cache.delete_memoized(home)  # Xóa cache của trang chủ
     response = make_response(redirect(url_for('products')))
     if "success" in result:
         response.headers['HX-Trigger'] = json.dumps({
@@ -661,10 +658,14 @@ def admin_add_brand():
     return response
 
 @app.route('/admin/update_brand/<brand_id>', methods=['POST'])
-@role_required("admin")
+@jwt_required()
+@permission_required('MANAGE_PRODUCTS')
 def admin_update_brand(brand_id):
     data = request.form
     result = update_brand_exc(brand_id, data)
+    if result.get("success"):
+        cache.delete_memoized(products)  # Xóa cache của /admin/products
+        cache.delete_memoized(home)  # Xóa cache của trang chủ
     response = make_response(redirect(url_for('products')))
     if "success" in result:
         response.headers['HX-Trigger'] = json.dumps({
@@ -685,9 +686,13 @@ def admin_update_brand(brand_id):
     return response
 
 @app.route('/admin/delete_brand/<brand_id>', methods=['POST'])
-@role_required("admin")
+@jwt_required()
+@permission_required('MANAGE_PRODUCTS')
 def admin_delete_brand(brand_id):
     result = delete_brand_exc(brand_id)
+    if result.get("success"):
+        cache.delete_memoized(products)  # Xóa cache của /admin/products
+        cache.delete_memoized(home)  # Xóa cache của trang chủ
     response = make_response(redirect(url_for('products')))
     if "success" in result:
         response.headers['HX-Trigger'] = json.dumps({
@@ -709,17 +714,22 @@ def admin_delete_brand(brand_id):
 
 @app.route('/admin/customers')
 @jwt_required()
-@role_required('admin')
+@permission_required('MANAGE_USERS')
+@cache.cached(timeout=300)  # Cache 5 phút
 def customers():
     customers = get_all_customers_exc()
     roles = get_all_roles_exc()
-    return render_template('admin/customers.html', customers=customers, roles=roles)
+    permissions = get_all_permissions_exc()
+    return render_template('admin/customers.html', customers=customers, roles=roles, permissions=permissions)
 
 @app.route('/admin/update_customer_role/<user_id>', methods=['POST'])
-@role_required("admin")
+@jwt_required()
+@permission_required('MANAGE_USERS')
 def admin_update_customer_role(user_id):
     data = request.form
     result = update_customer_role_exc(user_id, data)
+    if result.get("success"):
+        cache.delete_memoized(customers)  # Xóa cache của /admin/customers
     response = make_response(redirect(url_for('customers')))
     if "success" in result:
         response.headers['HX-Trigger'] = json.dumps({
@@ -740,10 +750,13 @@ def admin_update_customer_role(user_id):
     return response
 
 @app.route('/admin/add_role', methods=['POST'])
-@role_required("admin")
+@jwt_required()
+@permission_required('MANAGE_USERS')
 def admin_add_role():
     data = request.form
     result = add_role_exc(data)
+    if result.get("success"):
+        cache.delete_memoized(customers)  # Xóa cache của /admin/customers
     response = make_response(redirect(url_for('customers')))
     if "success" in result:
         response.headers['HX-Trigger'] = json.dumps({
@@ -763,21 +776,77 @@ def admin_add_role():
         })
     return response
 
+@app.route('/admin/update_role/<role_id>', methods=['POST'])
+@jwt_required()
+@permission_required('MANAGE_USERS')
+def admin_update_role(role_id):
+    data = request.form
+    permission_ids = request.form.getlist('permission_ids')
+    data = dict(data)
+    data['permission_ids'] = permission_ids
+    result = update_role_exc(role_id, data)
+    if result.get("success"):
+        cache.delete_memoized(customers)  # Xóa cache của /admin/customers
+    response = make_response(redirect(url_for('customers')))
+    if "success" in result:
+        response.headers['HX-Trigger'] = json.dumps({
+            'showAlert': {
+                'title': 'Thành công!',
+                'message': result["success"],
+                'icon': 'success'
+            }
+        })
+    else:
+        response.headers['HX-Trigger'] = json.dumps({
+            'showAlert': {
+                'title': 'Lỗi!',
+                'message': result.get("error", "Có lỗi xảy ra!"),
+                'icon': 'error'
+            }
+        })
+    return response
+
+@app.route('/admin/delete_role/<role_id>', methods=['POST'])
+@jwt_required()
+@permission_required('MANAGE_USERS')
+def admin_delete_role(role_id):
+    result = delete_role_exc(role_id)
+    if result.get("success"):
+        cache.delete_memoized(customers)  # Xóa cache của /admin/customers
+    return jsonify(result)
+
+@app.route('/admin/delete_customer/<user_id>', methods=['POST'])
+@jwt_required()
+@permission_required('MANAGE_USERS')
+def admin_delete_customer(user_id):
+    result = delete_customer_exc(user_id)
+    if result.get("success"):
+        cache.delete_memoized(customers)  # Xóa cache của /admin/customers
+    return jsonify(result)
+
 @app.route('/admin/reports', methods=['GET', 'POST'])
 @jwt_required()
-@role_required('admin')
+@permission_required('MANAGE_REPORTS')
+@cache.cached(timeout=300, query_string=True)  # Cache 5 phút
 def reports():
     time_frame = request.args.get('time_frame', 'month')
     if time_frame not in ['week', 'month', 'quarter', 'year']:
         time_frame = 'month'
 
     report_data = get_revenue_report(time_frame)
-    print("report_data:", report_data)  # Debug
+    print("report_data:", report_data)
     return render_template('admin/reports.html', report_data=report_data)
+
+@app.route('/admin/export_revenue_report')
+@jwt_required()
+@permission_required('MANAGE_REPORTS')
+def export_revenue_report():
+    return export_revenue_report_to_excel()
 
 @app.route('/admin/vouchers', methods=['GET'])
 @jwt_required()
-@role_required('admin')
+@permission_required('MANAGE_VOUCHERS')
+@cache.cached(timeout=300, query_string=True)  # Cache 5 phút
 def vouchers():
     search_query = request.args.get('search', '')
     vouchers = get_all_vouchers(search_query)
@@ -787,7 +856,8 @@ def vouchers():
 
 @app.route('/admin/voucher/<voucher_id>', methods=['GET'])
 @jwt_required()
-@role_required('admin')
+@permission_required('MANAGE_VOUCHERS')
+@cache.cached(timeout=300)  # Cache 5 phút
 def voucher_details(voucher_id):
     voucher = get_voucher_details(voucher_id)
     if voucher:
@@ -796,30 +866,45 @@ def voucher_details(voucher_id):
 
 @app.route('/admin/add_voucher', methods=['POST'])
 @jwt_required()
-@role_required('admin')
+@permission_required('MANAGE_VOUCHERS')
 def admin_add_voucher():
-    return add_voucher_exc()
+    result = add_voucher_exc()
+    if result.get("success"):
+        cache.delete_memoized(vouchers)  # Xóa cache của /admin/vouchers
+    return result
 
 @app.route('/admin/update_voucher', methods=['POST'])
 @jwt_required()
-@role_required('admin')
+@permission_required('MANAGE_VOUCHERS')
 def admin_update_voucher():
-    return update_voucher_exc()
+    result = update_voucher_exc()
+    if result.get("success"):
+        cache.delete_memoized(vouchers)  # Xóa cache của /admin/vouchers
+    return result
 
 @app.route('/admin/delete_voucher/<voucher_id>', methods=['POST'])
 @jwt_required()
-@role_required('admin')
+@permission_required('MANAGE_VOUCHERS')
 def admin_delete_voucher(voucher_id):
-    return delete_voucher_exc(voucher_id)
+    result = delete_voucher_exc(voucher_id)
+    if result.get("success"):
+        cache.delete_memoized(vouchers)  # Xóa cache của /admin/vouchers
+    return result
+
+# Routes Delivery
+@app.route('/delivery/login', methods=['GET', 'POST'])
+def delivery_login():
+    return render_template('delivery/auth/login.html')
+ 
+@app.route('/delivery')
+def delivery():
+    return render_template('delivery/index.html')
 
 @app.route("/logout")
 def logout():
-    # Xóa token JWT
     response = make_response(redirect(url_for('home')))
-    response.set_cookie('access_token_cookie', '', expires=0)  # Xóa cookie JWT
-    response.set_cookie('access_token', '', expires=0)  # Xóa cookie access_token nếu có
-    
-    # Thêm script để xóa token từ localStorage
+    response.set_cookie('access_token_cookie', '', expires=0)
+    response.set_cookie('access_token', '', expires=0)
     response.headers['HX-Trigger'] = json.dumps({
         'clearToken': True,
         'showSuccessAlert': {
@@ -827,14 +912,9 @@ def logout():
             'message': 'Bạn đã đăng xuất thành công'
         }
     })
-
-    # Đăng xuất người dùng hiện tại nếu đang sử dụng Flask-Login
     try:
         logout_user()
     except Exception:
         pass
-    
-    # Xóa session
     session.clear()    
     return response
-

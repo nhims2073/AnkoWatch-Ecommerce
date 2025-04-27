@@ -1,6 +1,6 @@
 import os
 from bson import ObjectId
-from flask import Flask
+from flask import Flask, request, redirect, url_for
 from flask_pymongo import PyMongo
 from flask_jwt_extended import JWTManager
 from flask_caching import Cache
@@ -19,7 +19,14 @@ login_manager.init_app(app)
 
 jwt = JWTManager(app)
 cache = Cache(app)
-mongo = PyMongo(app)  # PyMongo sẽ sử dụng kết nối từ Config
+mongo = PyMongo(app, serverSelectionTimeoutMS=30000, connectTimeoutMS=30000, socketTimeoutMS=30000)  # PyMongo sẽ sử dụng kết nối từ Config
+
+# Xử lý khi thiếu token JWT
+@jwt.unauthorized_loader
+def unauthorized_response(callback):
+    if request.path == '/payment_return':
+        return redirect(url_for('payment_return_route'))  # Chuyển hướng đến route /payment_return
+    return redirect(url_for('login'))
 
 @app.context_processor
 def inject_user():
@@ -65,6 +72,7 @@ def load_user(user_id):
         print(f"Error loading user: {e}")
     return None
 
+# Import routes
 from routes import *
 
 application = app
