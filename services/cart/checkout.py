@@ -1,6 +1,7 @@
 from flask import jsonify, render_template, flash, redirect, url_for, session, request, current_app
 from flask_jwt_extended import get_jwt_identity, get_jwt, jwt_required
-from app import mongo
+from flask_mail import Message
+from app import mongo, mail
 from bson import ObjectId
 from datetime import datetime, timedelta
 import random
@@ -191,14 +192,18 @@ def checkout_exc():
                 "discount": float(discount_amount) if discount_amount else 0,
                 "total": float(total),
                 "order_date": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                "payment_status": "pending",
-                "delivery_status": "pending"
+                "payment_status": "pending",  # Mặc định là pending
+                "delivery_status": "pending"  # Mặc định là pending
             }
 
             if payment_method == "COD":
                 order['user_id'] = ObjectId(user_id)
+                # COD: Cả payment_status và delivery_status đều là pending
+                order['payment_status'] = "pending"
+                order['delivery_status'] = "pending"
                 mongo.db.orders.insert_one(order)
                 mongo.db.carts.delete_one({"user_id": ObjectId(user_id)})
+                send_order_confirmation_email(order)
                 return render_template('cart/order-complete.html', order=order)
 
             elif payment_method == "vnpay":
@@ -257,10 +262,8 @@ def checkout_exc():
         flash(f"Đã xảy ra lỗi: {str(e)}", "danger")
         return render_template('cart/checkout.html', cart_items=[], subtotal=0, total=0, addresses=[], default_address=None)
 
+
 def payment_return():
-    """Xử lý phản hồi từ VNPay sau khi thanh toán, không yêu cầu đăng nhập."""
-    print(f"START payment_return: args={request.args.to_dict()}")
-    print(f"Session data: {session}")
     try:
         print("Fetching VNPay response")
         vnpay_response = request.args.to_dict()
@@ -276,9 +279,9 @@ def payment_return():
             print("Missing vnp_TxnRef or vnp_SecureHash")
             session['vnp_error_code'] = "N/A"
             session['vnp_error_message'] = "Không tìm thấy thông tin thanh toán từ VNPay."
-            session.pop("pending_order", None)
             session['vnp_response_code'] = ""
-            return
+            session.pop("pending_order", None)
+            return  # Trả về mà không cần gán session['order']
 
         print("Fetching pending order from session")
         order_data = session.get("pending_order")
@@ -287,8 +290,8 @@ def payment_return():
             print("Invalid pending_order or mismatched vnp_TxnRef")
             session['vnp_error_code'] = "N/A"
             session['vnp_error_message'] = "Thông tin đơn hàng không hợp lệ."
-            session.pop("pending_order", None)
             session['vnp_response_code'] = ""
+            session.pop("pending_order", None)
             return
 
         print("Verifying VNPay signature")
@@ -308,12 +311,11 @@ def payment_return():
             print("Invalid signature")
             session['vnp_error_code'] = "N/A"
             session['vnp_error_message'] = "Chữ ký không hợp lệ từ VNPay."
-            session.pop("pending_order", None)
             session['vnp_response_code'] = ""
+            session.pop("pending_order", None)
             return
 
         print(f"Processing response code: {vnp_response_code}")
-        # Định nghĩa các mã lỗi của VNPay
         vnpay_error_codes = {
             "00": "Giao dịch thành công",
             "07": "Trừ tiền thành công. Giao dịch bị nghi ngờ (liên quan tới lừa đảo, giao dịch bất thường).",
@@ -342,6 +344,9 @@ def payment_return():
                 item["quantity"] = int(item["quantity"])
                 item["price"] = float(item["price"])
 
+            # VNPay: payment_status là paid, delivery_status là pending
+            order_for_db["payment_status"] = "paid"
+            order_for_db["delivery_status"] = "pending"
             order_for_db["payment_details"] = {
                 "method": "vnpay",
                 "status": "paid",
@@ -352,6 +357,9 @@ def payment_return():
 
             print(f"Saving order to database: {order_for_db}")
             mongo.db.orders.insert_one(order_for_db)
+
+            # Gửi email xác nhận đơn hàng
+            send_order_confirmation_email(order_for_db)
 
             if "user_id" in order_data:
                 print(f"Deleting cart for user: {order_data['user_id']}")
@@ -377,23 +385,103 @@ def payment_return():
         session['vnp_response_code'] = ""
         session.pop("pending_order", None)
 
+def send_order_confirmation_email(order):
+    try:
+        print(f"Debug: Full order data = {order}")
+        receiver_email = order.get('receiver_email')
+        if not isinstance(receiver_email, str) or not receiver_email:
+            print(f"Error: Invalid receiver_email: {receiver_email}")
+            return
 
+        # Kiểm tra trường items
+        if not isinstance(order.get('items'), list):
+            print(f"Error: order['items'] is not a list: {order.get('items')}")
+            return
+
+        sender = current_app.config.get('MAIL_DEFAULT_SENDER', 'duchieutran1302@gmail.com')
+        print(f"Debug: sender = {sender}, type = {type(sender)}")
+        
+        recipients = [receiver_email]
+        print(f"Debug: recipients = {recipients}, type = {type(recipients)}")
+        
+        msg = Message(
+            subject=f"Xác nhận đơn hàng #{order['order_id']}",
+            recipients=recipients,
+            sender=sender,
+            cc=[],
+            bcc=[]
+        )
+
+        # Kiểm tra các trường bắt buộc
+        required_fields = ['order_id', 'receiver_name', 'receiver_email', 'receiver_phone', 
+                          'receiver_address', 'payment_method', 'items', 'subtotal', 
+                          'discount', 'total', 'order_date']
+        for field in required_fields:
+            if field not in order:
+                print(f"Error: Missing required field {field} in order data")
+                return
+
+        # Định nghĩa URL ảnh test từ Vercel
+        image_url = "https://anko-watch-ecommerce-h6yval1t0-test-a643722c.vercel.app/public/Untitled.png"
+        # Định nghĩa URL của tracking pixel
+        tracking_pixel_url = f"https://anko-watch-ecommerce-h6yval1t0-test-a643722c.vercel.app/tracking_pixel/{order['order_id']}"
+
+        # Render nội dung email với ảnh và tracking pixel
+        msg.html = render_template('email/order_confirmation.html', order=order)
+        msg.html += f'''
+        <img src="{image_url}">
+        <img src="{tracking_pixel_url}">
+        '''
+        print(f"Debug: After setting msg.html, msg.html = {msg.html[:100]}...")
+
+        mail.send(msg)
+        print(f"Email xác nhận đơn hàng #{order['order_id']} đã được gửi đến {order['receiver_email']}")
+
+        # Lưu thông tin vào mail_tracking
+        mail_tracking_data = {
+            "order_id": order['order_id'],
+            "user_id": order['user_id'],
+            "time_sent": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            "read_at": None
+        }
+        mongo.db.mail_tracking.insert_one(mail_tracking_data)
+        print(f"Mail tracking data saved for order {order['order_id']}: {mail_tracking_data}")
+
+    except Exception as e:
+        import traceback
+        print(f"Lỗi khi gửi email xác nhận đơn hàng: {str(e)}")
+        print(f"Traceback: {traceback.format_exc()}")
 
 def invoice_detail_exc(order_id):
-    user_id = get_jwt_identity()
-    if not user_id:
-        return redirect(url_for('login'))
-
-    order = mongo.db.orders.find_one({"order_id": order_id, "user_id": ObjectId(user_id)})
+    # Không kiểm tra user_id từ JWT, thay vào đó tìm đơn hàng bằng order_id
+    order = mongo.db.orders.find_one({"order_id": order_id})
     if not order:
         flash("Không tìm thấy đơn hàng.", "danger")
-        return redirect(url_for('orders'))
+        return redirect(url_for('home'))  # Chuyển hướng đến trang chủ nếu không tìm thấy
 
+    # Chuyển đổi các trường cần thiết sang string
     order['_id'] = str(order['_id'])
-    order['user_id'] = str(order['user_id'])
+    order['user_id'] = str(order.get('user_id', ''))
 
     if 'items' not in order or not isinstance(order['items'], list):
         print(f"Invalid items data for order {order_id}: {order.get('items')}")
         order['items'] = []
 
-    return render_template('cart/invoice-detail.html', order=order)
+    # Lấy thông tin từ mail_tracking dựa trên order_id
+    tracking = mongo.db.mail_tracking.find_one({"order_id": order_id})
+
+    # Xử lý tham số track=read mà không cần xác thực người dùng
+    if request.args.get('track') == 'read':
+        if tracking:
+            result = mongo.db.mail_tracking.update_one(
+                {"order_id": order_id},
+                {"$set": {"read_at": datetime.now().strftime('%Y-%m-%d %H:%M:%S')}}
+            )
+            if result.modified_count > 0:
+                print(f"Order {order_id} email marked as read at {datetime.now()}")
+            else:
+                print(f"No mail tracking record found for order {order_id} or already marked as read")
+        else:
+            print(f"No mail tracking record found for order {order_id}")
+
+    return render_template('cart/invoice-detail.html', order=order, tracking=tracking)

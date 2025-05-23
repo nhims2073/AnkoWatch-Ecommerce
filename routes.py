@@ -1,6 +1,9 @@
 import json
+from io import BytesIO
+import requests
 from bson import ObjectId
-from flask import Blueprint, jsonify, render_template, request, make_response, flash, redirect, url_for, session
+from PIL import Image
+from flask import Blueprint, jsonify, render_template, request, make_response, flash, redirect, url_for, session, send_file
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from services.account import change_password_exc
 from services.account.account_exc import get_user_info, update_user_info
@@ -14,7 +17,7 @@ from services.cart import add_to_cart, remove_cart, update_cart
 from services.cart.cart import cart_exc
 from services.cart.cart_count import cart_count_exc
 from services.middleware import permission_required, role_required
-from app import app, mongo, cache
+from app import app, mongo, cache, mail
 from services.auth.register_exc import register_exc
 from services.auth.login_exc import login_exc
 from flask_login import logout_user
@@ -25,10 +28,11 @@ from services.cart.checkout import apply_voucher_exc, checkout_exc, invoice_deta
 from services.admin.customer_exc import delete_customer_exc, delete_role_exc, get_all_customers_exc, get_all_permissions_exc, update_customer_role_exc, get_all_roles_exc, add_role_exc, update_role_exc
 from services.admin.dashboard_exc import get_dashboard_stats
 from services.admin.orders_exc import get_all_orders, get_orders_by_status, get_order_details, update_order_status
+from flask_mail import Message
+from datetime import datetime
 
 # User Routes
 @app.route('/')
-@cache.cached(timeout=300)  # Cache 5 phút
 def home():
     # Lấy danh sách sản phẩm bán chạy từ collection products
     products = list(mongo.db.products.find(
@@ -238,6 +242,10 @@ def payment_return_route():
     session.pop('vnp_response_code', None)
     session.pop('vnp_error_code', None)
     session.pop('vnp_error_message', None)
+
+    if not order:
+        flash("Không tìm thấy thông tin đơn hàng. Vui lòng thử lại.", "danger")
+        return redirect(url_for('checkout'))
     
     return render_template('cart/payment_return.html',
                          order=order,
@@ -246,7 +254,6 @@ def payment_return_route():
                          vnp_error_message=vnp_error_message)
 
 @app.route('/invoice/<order_id>')
-@jwt_required()
 def invoice_detail(order_id):
     return invoice_detail_exc(order_id)
 
@@ -315,6 +322,14 @@ def search():
 @jwt_required()
 def checkout():
     return checkout_exc()
+
+@app.route('/order-complete')
+def order_complete():
+    order = session.get("order")
+    if not order:
+        return redirect(url_for("home"))
+    return render_template("cart/order-complete.html", order=order)
+
 
 @app.route('/policy')
 def policy():
@@ -918,3 +933,43 @@ def logout():
         pass
     session.clear()    
     return response
+
+@app.route('/tracking_image/<order_id>')
+def tracking_image(order_id):
+    try:
+        # URL của hình ảnh từ cms.123code.net
+        image_url = "https://cms.123code.net/uploads/2024/12/06/2024-12-06__tableau-chat.webp"
+        
+        # Tải hình ảnh từ URL
+        response = requests.get(image_url)
+        if response.status_code != 200:
+            # Nếu không tải được ảnh, trả về một ảnh placeholder 1x1
+            img = Image.new('RGB', (1, 1), color='white')
+            img_io = BytesIO()
+            img.save(img_io, 'PNG')
+            img_io.seek(0)
+            print(f"Error: Could not download image from {image_url} for order {order_id}")
+        else:
+            img_io = BytesIO(response.content)
+
+        # Cập nhật trạng thái read_at trong mail_tracking
+        tracking = mongo.db.mail_tracking.find_one({"order_id": order_id})
+        if tracking and not tracking.get('read_at'):
+            result = mongo.db.mail_tracking.update_one(
+                {"order_id": order_id},
+                {"$set": {"read_at": datetime.now().strftime('%Y-%m-%d %H:%M:%S')}}
+            )
+            if result.modified_count > 0:
+                print(f"Order {order_id} email marked as read via tracking image at {datetime.now()}")
+
+        # Trả về hình ảnh
+        return send_file(img_io, mimetype='image/webp')
+
+    except Exception as e:
+        print(f"Error in tracking_image for order {order_id}: {str(e)}")
+        # Trả về ảnh placeholder nếu có lỗi
+        img = Image.new('RGB', (1, 1), color='white')
+        img_io = BytesIO()
+        img.save(img_io, 'PNG')
+        img_io.seek(0)
+        return send_file(img_io, mimetype='image/png')

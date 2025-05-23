@@ -4,6 +4,7 @@ from flask import Flask, request, redirect, url_for
 from flask_pymongo import PyMongo
 from flask_jwt_extended import JWTManager
 from flask_caching import Cache
+from flask_mail import Mail
 from config import Config
 from flask_login import LoginManager, UserMixin, current_user
 
@@ -19,7 +20,8 @@ login_manager.init_app(app)
 
 jwt = JWTManager(app)
 cache = Cache(app)
-mongo = PyMongo(app, serverSelectionTimeoutMS=30000, connectTimeoutMS=30000, socketTimeoutMS=30000)  # PyMongo sẽ sử dụng kết nối từ Config
+mongo = PyMongo(app, serverSelectionTimeoutMS=30000, connectTimeoutMS=30000, socketTimeoutMS=30000)
+mail = Mail(app)
 
 # Xử lý khi thiếu token JWT
 @jwt.unauthorized_loader

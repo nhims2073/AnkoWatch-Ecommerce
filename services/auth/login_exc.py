@@ -46,12 +46,10 @@ def login_exc():
         # Truy vấn user từ collection users
         user_data = mongo.db.users.find_one({"username": username})
         if not user_data:
-            logger.warning(f"Không tìm thấy người dùng với tên {username}")
             return jsonify({"success": False, "message": "Không tìm thấy người dùng!"}), 404
 
         # Kiểm tra mật khẩu
         if not check_password_hash(user_data["password"], password):
-            logger.warning(f"Mật khẩu không hợp lệ cho người dùng {username}")
             return jsonify({"success": False, "message": "Mật khẩu không hợp lệ!"}), 401
 
         # Truy vấn thông tin vai trò từ role_id
@@ -68,7 +66,6 @@ def login_exc():
                         # Truy vấn danh sách quyền từ permissions
                         perms = mongo.db.permissions.find({"_id": {"$in": [ObjectId(pid) for pid in permission_ids]}})
                         permissions = [perm["code"] for perm in perms]
-                    logger.info(f"Vai trò của người dùng {username}: {role_name}, Quyền: {permissions}")
                 else:
                     logger.warning(f"Không tìm thấy vai trò với role_id {user_data['role_id']} cho người dùng {username}")
             except Exception as e:
@@ -94,7 +91,6 @@ def login_exc():
             "discount_amount": user_data.get("discount_amount", 0)
         }
         access_token = create_access_token(identity=user_id, additional_claims=additional_claims)
-        logger.info(f"Tạo JWT token cho người dùng {username} với claims: {additional_claims}")
 
         # Tạo response và đặt cookie
         response = make_response(

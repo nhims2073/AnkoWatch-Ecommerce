@@ -23,3 +23,10 @@ class Config:
     VNPAY_HASH_SECRET = os.getenv("VNPAY_HASH_SECRET")
     VNPAY_URL = os.getenv("VNPAY_URL")
     VNPAY_RETURN_URL = os.getenv("VNPAY_RETURN_URL")
+
+    MAIL_SERVER = os.getenv("MAIL_SERVER", "smtp.gmail.com")
+    MAIL_PORT = int(os.getenv("MAIL_PORT", 587))
+    MAIL_USE_TLS = os.getenv("MAIL_USE_TLS", "True") == "True"
+    MAIL_USERNAME = os.getenv("MAIL_USERNAME")
+    MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
+    MAIL_DEFAULT_SENDER = os.getenv("MAIL_DEFAULT_SENDER")
