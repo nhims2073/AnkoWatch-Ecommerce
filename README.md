@@ -64,7 +64,7 @@ You can use a test account provided by VNPAY official
    Card number: 9704198526191432198
    Card Holder: NGUYEN VAN A
    Issuing date: 07/15
-   OTP: 12345
+   OTP: 123456
 ## Update 23/05/2025
 
 You can test all function in this project with this link 👉 https://anko-watch-ecommerce-phongngh-test-a643722c.vercel.app/
