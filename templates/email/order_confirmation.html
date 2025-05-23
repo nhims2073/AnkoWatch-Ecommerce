@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Xác nhận đơn hàng</title>
+</head>
+<body>
+    <h1>Xác nhận đơn hàng #{{ order.order_id if order.order_id else 'N/A' }}</h1>
+    <p>Xin chào {{ order.receiver_name if order.receiver_name else 'Khách hàng' }},</p>
+    <p>Cảm ơn bạn đã đặt hàng tại cửa hàng của chúng tôi! Dưới đây là chi tiết đơn hàng của bạn:</p>
+
+    <h3>Thông tin đơn hàng</h3>
+    <p>Mã đơn hàng: {{ order.order_id if order.order_id else 'N/A' }}</p>
+    <p>Ngày đặt hàng: {{ order.order_date if order.order_date else 'N/A' }}</p>
+    <p>Phương thức thanh toán: {{ order.payment_method if order.payment_method else 'N/A' }}</p>
+    <p>Địa chỉ giao hàng: {{ order.receiver_address if order.receiver_address else 'N/A' }}</p>
+    <p>Số điện thoại: {{ order.receiver_phone if order.receiver_phone else 'N/A' }}</p>
+
+    <h3>Chi tiết sản phẩm</h3>
+    <table>
+        <tr>
+            <th>Sản phẩm</th>
+            <th>Số lượng</th>
+            <th>Giá</th>
+            <th>Tổng</th>
+        </tr>
+        {% if order.get('items') and order.get('items')|length > 0 %}
+            {% for item in order.get('items') %}
+                <tr>
+                    <td>{{ item.name if item.name else 'N/A' }}</td>
+                    <td>{{ item.quantity if item.quantity else 0 }}</td>
+                    <td>{{ "{:,.0f}".format(item.price) if item.price else 0 }} VND</td>
+                    <td>{{ "{:,.0f}".format(item.price * item.quantity) if item.price and item.quantity else 0 }} VND</td>
+                </tr>
+            {% endfor %}
+        {% else %}
+            <tr>
+                <td colspan="4">Không có sản phẩm</td>
+            </tr>
+        {% endif %}
+    </table>
+
+    <h3>Tổng cộng</h3>
+    <p>Tổng phụ: {{ "{:,.0f}".format(order.subtotal) if order.subtotal else 0 }} VND</p>
+    <p>Giảm giá: {{ "{:,.0f}".format(order.discount) if order.discount else 0 }} VND</p>
+    <p>VAT (10%): {{ "{:,.0f}".format(order.subtotal * 0.1) if order.subtotal else 0 }} VND</p>
+    <p>Tổng cộng: {{ "{:,.0f}".format(order.total) if order.total else 0 }} VND</p>
+
+    <p>
+        <a href="http://127.0.0.1:5000/invoice/{{ order.order_id }}?track=read">Xem chi tiết đơn hàng</a>
+    </p>
+
+    <p>Chúng tôi sẽ xử lý đơn hàng của bạn sớm nhất có thể. Bạn có thể theo dõi trạng thái đơn hàng trong tài khoản của mình.</p>
+    <p>Trân trọng,<br>Anko Watch</p>
+
+</body>
+</html>

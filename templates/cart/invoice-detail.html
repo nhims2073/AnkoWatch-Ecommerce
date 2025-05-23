@@ -33,7 +33,11 @@
 
     <div class="container invoice-container">
         <div class="invoice-header">
-            <h2>Chi tiết đơn hàng</h2>
+            {% if tracking and tracking.read_at %}
+                <p style="color: green;">Email xác nhận của bạn đã được đánh dấu là đã đọc vào {{ tracking.read_at }}.</p>
+            {% endif %}
+
+            <h2>Chi tiết hóa đơn cho đơn hàng #{{ order.order_id }}</h2>
             <p><strong>Mã đơn hàng:</strong> {{ order.order_id }}</p>
             <p><strong>Ngày đặt hàng:</strong> {{ order.order_date }}</p>
         </div>
