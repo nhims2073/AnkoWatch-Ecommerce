@@ -53,3 +53,7 @@ Anko Watch is a web application developed using **Flask** for the backend and **
 **Frontend**: HTML, CSS, JavaScript, Bootstrap  
 **Caching**: Redis  
 **Image Storage**: Cloudinary  
+
+### Update 23/05/2025
+
+You can test all function in this project with this link 👉 https://anko-watch-ecommerce-pied.vercel.app/
