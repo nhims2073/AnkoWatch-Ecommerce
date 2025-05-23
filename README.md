@@ -45,7 +45,6 @@ Anko Watch is a web application developed using **Flask** for the backend and **
 
 5. Access the application on http://localhost:5000.
 
-
 ## Technologies Used
 **Backend**: Flask  
 **Database**: MongoDB  
@@ -55,6 +54,17 @@ Anko Watch is a web application developed using **Flask** for the backend and **
 **Image Storage**: Cloudinary  
 **Alert Effect**: SweetAlert2
 
+## If you use VNPAY method for payment
+You can use a test account provided by VNPAY official
+
+1. Click "Domestic card and bank account, choose NCB" like this ![Step 1](public/step1.png)
+
+2. Enter this card information 
+   ```bash
+   **Card number**: 9704198526191432198
+   **Card Holder**: NGUYEN VAN A
+   **Issuing date**: 07/15
+   **OTP**: 123456
 ## Update 23/05/2025
 
-You can test all function in this project with this link 👉 https://anko-watch-ecommerce-pied.vercel.app/
+You can test all function in this project with this link 👉 https://anko-watch-ecommerce-phongngh-test-a643722c.vercel.app/
