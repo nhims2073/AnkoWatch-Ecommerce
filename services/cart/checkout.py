@@ -29,10 +29,15 @@ def apply_voucher(voucher_code, subtotal):
         if datetime.strptime(voucher["expiry_date"], '%Y-%m-%d') < datetime.now():
             return None, "Mã voucher đã hết hạn!"
 
-        discount_percent = float(voucher["discount"])
+        discount_percent = voucher.get("discount")
+        if not isinstance(discount_percent, (int, float)):
+            print(f"Invalid discount value for voucher {voucher_code}: {discount_percent}")
+            return None, "Mã voucher không hợp lệ: Giá trị giảm giá không hợp lệ!"
+        discount_percent = float(discount_percent)
         discount_amount = subtotal * (discount_percent / 100)
         return discount_amount, f"Áp dụng voucher thành công!"
     except Exception as e:
+        print(f"Error in apply_voucher for code {voucher_code}: {str(e)}")
         return None, f"Lỗi khi áp dụng voucher: {str(e)}"
 
 def apply_voucher_exc():
@@ -88,9 +93,8 @@ def checkout_exc():
             for item in cart['products']:
                 if str(item['product_id']) == product['_id']:
                     product['quantity'] = item['quantity']
-                    # Ưu tiên sử dụng discounted_price nếu tồn tại, nếu không thì dùng price
                     price = float(product.get('discounted_price', product.get('price', 0)))
-                    product['discounted_price'] = price  # Đảm bảo cart_items chứa discounted_price
+                    product['discounted_price'] = price
                     subtotal += price * item['quantity']
                     cart_items.append(product)
                     break
@@ -103,7 +107,7 @@ def checkout_exc():
         voucher_discount = 0
         if voucher_code:
             discount_amount, message = apply_voucher(voucher_code, subtotal)
-            if discount_amount:
+            if isinstance(discount_amount, (int, float)):
                 voucher_discount = discount_amount
                 session['voucher_code'] = voucher_code
                 session['voucher_discount'] = voucher_discount
@@ -113,14 +117,12 @@ def checkout_exc():
                 session.pop('voucher_discount', None)
                 flash(message, "danger")
 
-        # Tính total trước khi cộng VAT
-        total = subtotal - (float(discount_amount) if discount_amount else 0) - voucher_discount
+        total = subtotal - (float(discount_amount) if isinstance(discount_amount, (int, float)) else 0) - voucher_discount
         if total < 0:
-            total = 0  # Đảm bảo tổng không âm
+            total = 0
 
-        # Tính VAT và cập nhật total
-        vat = subtotal * 0.1  # VAT 10%
-        total = total + vat  # Cộng VAT vào total
+        vat = subtotal * 0.1
+        total = total + vat
 
         addresses = list(mongo.db.list_address.find({"user_id": ObjectId(user_id)}))
         for address in addresses:
@@ -184,27 +186,56 @@ def checkout_exc():
                 "payment_method": payment_method,
                 "items": [{
                     "name": item.get('name', 'Không xác định'),
-                    "price": float(item.get('discounted_price', item.get('price', 0))),  # Sử dụng discounted_price
+                    "price": float(item.get('discounted_price', item.get('price', 0))),
                     "quantity": int(item.get('quantity', 1)),
                     "image": item.get('image', '')
                 } for item in cart_items],
                 "subtotal": float(subtotal),
-                "discount": float(discount_amount) if discount_amount else 0,
+                "discount": float(discount_amount) if isinstance(discount_amount, (int, float)) else 0,
                 "total": float(total),
                 "order_date": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                "payment_status": "pending",  # Mặc định là pending
-                "delivery_status": "pending"  # Mặc định là pending
+                "payment_status": "pending",
+                "delivery_status": "pending"
             }
 
+            print(f"Order data before saving: {order}")
+
             if payment_method == "COD":
-                order['user_id'] = ObjectId(user_id)
-                # COD: Cả payment_status và delivery_status đều là pending
-                order['payment_status'] = "pending"
-                order['delivery_status'] = "pending"
-                mongo.db.orders.insert_one(order)
-                mongo.db.carts.delete_one({"user_id": ObjectId(user_id)})
-                send_order_confirmation_email(order)
-                return render_template('cart/order-complete.html', order=order)
+                try:
+                    # Lưu đơn hàng và gửi email
+                    mongo.db.orders.insert_one(order)
+                    mongo.db.carts.delete_one({"user_id": ObjectId(user_id)})
+                    send_order_confirmation_email(order)
+                    saved_order = mongo.db.orders.find_one({"order_id": order["order_id"]})
+                    print(f"Order data after saving: {saved_order}")
+
+                    # Đảm bảo order không bị ghi đè bởi saved_order
+                    # Xóa trường _id nếu có
+                    if '_id' in order:
+                        del order['_id']
+
+                    # Kiểm tra lại trường items
+                    if not isinstance(order['items'], list):
+                        print(f"Error: order['items'] is not a list before rendering: {order['items']}")
+                        raise ValueError("order['items'] must be a list")
+
+                    # Kiểm tra từng trường của order trước khi render
+                    for key, value in order.items():
+                        print(f"Order field {key}: {value} (type: {type(value)})")
+                        if not isinstance(value, (str, int, float, list, dict)):
+                            print(f"Warning: Field {key} has unexpected type: {type(value)}")
+
+                    # Thử render template
+                    print("Attempting to render order-complete.html...")
+                    rendered_template = render_template('cart/order-complete.html', order=order)
+                    print("Template rendered successfully. Returning response...")
+                    return rendered_template
+
+                except Exception as render_error:
+                    print(f"Error during COD processing: {str(render_error)}")
+                    import traceback
+                    print(f"Traceback: {traceback.format_exc()}")
+                    raise render_error
 
             elif payment_method == "vnpay":
                 try:
@@ -262,7 +293,6 @@ def checkout_exc():
         flash(f"Đã xảy ra lỗi: {str(e)}", "danger")
         return render_template('cart/checkout.html', cart_items=[], subtotal=0, total=0, addresses=[], default_address=None)
 
-
 def payment_return():
     try:
         print("Fetching VNPay response")
@@ -281,7 +311,7 @@ def payment_return():
             session['vnp_error_message'] = "Không tìm thấy thông tin thanh toán từ VNPay."
             session['vnp_response_code'] = ""
             session.pop("pending_order", None)
-            return  # Trả về mà không cần gán session['order']
+            return
 
         print("Fetching pending order from session")
         order_data = session.get("pending_order")
@@ -336,7 +366,7 @@ def payment_return():
             print("Payment successful, preparing order for database")
             order_for_db = order_data.copy()
             if "user_id" in order_for_db:
-                order_for_db["user_id"] = ObjectId(order_for_db["user_id"])
+                order_for_db["user_id"] = str(order_for_db["user_id"])  # Đảm bảo user_id là chuỗi
             order_for_db["subtotal"] = float(order_for_db["subtotal"])
             order_for_db["total"] = float(order_for_db["total"])
             order_for_db["discount"] = float(order_for_db["discount"])
@@ -344,7 +374,6 @@ def payment_return():
                 item["quantity"] = int(item["quantity"])
                 item["price"] = float(item["price"])
 
-            # VNPay: payment_status là paid, delivery_status là pending
             order_for_db["payment_status"] = "paid"
             order_for_db["delivery_status"] = "pending"
             order_for_db["payment_details"] = {
@@ -358,14 +387,13 @@ def payment_return():
             print(f"Saving order to database: {order_for_db}")
             mongo.db.orders.insert_one(order_for_db)
 
-            # Gửi email xác nhận đơn hàng
             send_order_confirmation_email(order_for_db)
 
             if "user_id" in order_data:
                 print(f"Deleting cart for user: {order_data['user_id']}")
                 mongo.db.carts.delete_one({"user_id": ObjectId(order_data["user_id"])})
 
-            session['order'] = order_for_db  # Lưu order vào session
+            session['order'] = order_for_db
             session['vnp_response_code'] = vnp_response_code
             session.pop("pending_order", None)
             print("Cleared pending_order from session")
@@ -393,7 +421,6 @@ def send_order_confirmation_email(order):
             print(f"Error: Invalid receiver_email: {receiver_email}")
             return
 
-        # Kiểm tra trường items
         if not isinstance(order.get('items'), list):
             print(f"Error: order['items'] is not a list: {order.get('items')}")
             return
@@ -412,7 +439,6 @@ def send_order_confirmation_email(order):
             bcc=[]
         )
 
-        # Kiểm tra các trường bắt buộc
         required_fields = ['order_id', 'receiver_name', 'receiver_email', 'receiver_phone', 
                           'receiver_address', 'payment_method', 'items', 'subtotal', 
                           'discount', 'total', 'order_date']
@@ -421,12 +447,9 @@ def send_order_confirmation_email(order):
                 print(f"Error: Missing required field {field} in order data")
                 return
 
-        # Định nghĩa URL ảnh test từ Vercel
         image_url = "https://anko-watch-ecommerce-pied.vercel.app/public/Untitled.png"
-        # Định nghĩa URL của tracking pixel
         tracking_pixel_url = f"https://anko-watch-ecommerce-pied.vercel.app/tracking_pixel/{order['order_id']}"
 
-        # Render nội dung email với ảnh và tracking pixel
         msg.html = render_template('email/order_confirmation.html', order=order)
         msg.html += f'''
         <img src="{image_url}">
@@ -437,10 +460,9 @@ def send_order_confirmation_email(order):
         mail.send(msg)
         print(f"Email xác nhận đơn hàng #{order['order_id']} đã được gửi đến {order['receiver_email']}")
 
-        # Lưu thông tin vào mail_tracking
         mail_tracking_data = {
             "order_id": order['order_id'],
-            "user_id": order['user_id'],
+            "user_id": str(order['user_id']),  # Đảm bảo user_id là chuỗi
             "time_sent": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
             "read_at": None
         }
@@ -453,13 +475,11 @@ def send_order_confirmation_email(order):
         print(f"Traceback: {traceback.format_exc()}")
 
 def invoice_detail_exc(order_id):
-    # Không kiểm tra user_id từ JWT, thay vào đó tìm đơn hàng bằng order_id
     order = mongo.db.orders.find_one({"order_id": order_id})
     if not order:
         flash("Không tìm thấy đơn hàng.", "danger")
-        return redirect(url_for('home'))  # Chuyển hướng đến trang chủ nếu không tìm thấy
+        return redirect(url_for('home'))
 
-    # Chuyển đổi các trường cần thiết sang string
     order['_id'] = str(order['_id'])
     order['user_id'] = str(order.get('user_id', ''))
 
@@ -467,10 +487,8 @@ def invoice_detail_exc(order_id):
         print(f"Invalid items data for order {order_id}: {order.get('items')}")
         order['items'] = []
 
-    # Lấy thông tin từ mail_tracking dựa trên order_id
     tracking = mongo.db.mail_tracking.find_one({"order_id": order_id})
 
-    # Xử lý tham số track=read mà không cần xác thực người dùng
     if request.args.get('track') == 'read':
         if tracking:
             result = mongo.db.mail_tracking.update_one(
