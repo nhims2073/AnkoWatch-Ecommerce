@@ -934,23 +934,14 @@ def logout():
     session.clear()    
     return response
 
-@app.route('/tracking_image/<order_id>')
-def tracking_image(order_id):
+@app.route('/tracking_pixel/<order_id>')
+def tracking_pixel(order_id):
     try:
-        # URL của hình ảnh từ cms.123code.net
-        image_url = "https://cms.123code.net/uploads/2024/12/06/2024-12-06__tableau-chat.webp"
-        
-        # Tải hình ảnh từ URL
-        response = requests.get(image_url)
-        if response.status_code != 200:
-            # Nếu không tải được ảnh, trả về một ảnh placeholder 1x1
-            img = Image.new('RGB', (1, 1), color='white')
-            img_io = BytesIO()
-            img.save(img_io, 'PNG')
-            img_io.seek(0)
-            print(f"Error: Could not download image from {image_url} for order {order_id}")
-        else:
-            img_io = BytesIO(response.content)
+        # Tạo một ảnh 1x1 pixel đơn giản (màu trắng)
+        img = Image.new('RGB', (1, 1), color='white')
+        img_io = BytesIO()
+        img.save(img_io, 'PNG')
+        img_io.seek(0)
 
         # Cập nhật trạng thái read_at trong mail_tracking
         tracking = mongo.db.mail_tracking.find_one({"order_id": order_id})
@@ -960,13 +951,12 @@ def tracking_image(order_id):
                 {"$set": {"read_at": datetime.now().strftime('%Y-%m-%d %H:%M:%S')}}
             )
             if result.modified_count > 0:
-                print(f"Order {order_id} email marked as read via tracking image at {datetime.now()}")
+                print(f"Order {order_id} email marked as read via tracking pixel at {datetime.now()}")
 
-        # Trả về hình ảnh
-        return send_file(img_io, mimetype='image/webp')
+        return send_file(img_io, mimetype='image/png')
 
     except Exception as e:
-        print(f"Error in tracking_image for order {order_id}: {str(e)}")
+        print(f"Error in tracking_pixel for order {order_id}: {str(e)}")
         # Trả về ảnh placeholder nếu có lỗi
         img = Image.new('RGB', (1, 1), color='white')
         img_io = BytesIO()

@@ -422,9 +422,9 @@ def send_order_confirmation_email(order):
                 return
 
         # Định nghĩa URL ảnh test từ Vercel
-        image_url = "https://anko-watch-ecommerce-h6yval1t0-test-a643722c.vercel.app/public/Untitled.png"
+        image_url = "https://anko-watch-ecommerce-pied.vercel.app/public/Untitled.png"
         # Định nghĩa URL của tracking pixel
-        tracking_pixel_url = f"https://anko-watch-ecommerce-h6yval1t0-test-a643722c.vercel.app/tracking_pixel/{order['order_id']}"
+        tracking_pixel_url = f"https://anko-watch-ecommerce-pied.vercel.app/tracking_pixel/{order['order_id']}"
 
         # Render nội dung email với ảnh và tracking pixel
         msg.html = render_template('email/order_confirmation.html', order=order)
