@@ -11,7 +11,7 @@ Anko Watch is a web application developed using **Flask** for the backend and **
 - **Manage Promotions**: Admin can create and manage promotional offers.
 - **Manage News**: Admin can add, update, or delete news articles.
 - **Manage Orders**: Admin can view and manage all customer orders.
-- **Revenue Statistics**: Admin can view and track revenue statistics.
+- **Revenue Statistics**: Admin can view, track revenue statistics and export as .csv file.
 
 ### User Functions:
 - **View Products**: Users can browse through all the products available in the system.
@@ -53,7 +53,8 @@ Anko Watch is a web application developed using **Flask** for the backend and **
 **Frontend**: HTML, CSS, JavaScript, Bootstrap  
 **Caching**: Redis  
 **Image Storage**: Cloudinary  
+**Alert Effect**: SweetAlert2
 
-### Update 23/05/2025
+## Update 23/05/2025
 
 You can test all function in this project with this link 👉 https://anko-watch-ecommerce-pied.vercel.app/
