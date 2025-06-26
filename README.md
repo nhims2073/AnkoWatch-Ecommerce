@@ -57,8 +57,7 @@ Anko Watch is a web application developed using **Flask** for the backend and **
 ## If you use VNPAY method for payment
 You can use a test account provided by VNPAY official
 
-1. Click "Domestic card and bank account, choose NCB" like this ![Step 1](public/step1.png)
-
+1. Click Domestic card and bank account, choose NCB
 2. Enter this card information 
    ```bash
    Card number: 9704198526191432198
