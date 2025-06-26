@@ -30,7 +30,7 @@ Anko Watch is a web application developed using **Flask** for the backend and **
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/PhongNgh/AnkoWatch-Ecommerce.git
+   git clone https://github.com/nhims2073/AnkoWatch-Ecommerce.git
 
 
 2. Install required dependencies:
